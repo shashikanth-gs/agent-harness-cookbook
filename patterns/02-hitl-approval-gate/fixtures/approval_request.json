@@ -1,0 +1,9 @@
+{
+  "action": "restart_service",
+  "parameters": {
+    "service": "orders-api",
+    "environment": "prod"
+  },
+  "risk_level": "high",
+  "reason": "Production restart can affect active users."
+}

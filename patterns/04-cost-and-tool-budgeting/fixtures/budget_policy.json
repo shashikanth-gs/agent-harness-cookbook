@@ -1,0 +1,8 @@
+{
+  "max_model_calls": 2,
+  "max_tool_calls": 3,
+  "max_retries": 1,
+  "max_agent_handoffs": 0,
+  "max_retrieved_documents": 2,
+  "max_tokens": 800
+}

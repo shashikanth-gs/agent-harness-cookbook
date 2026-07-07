@@ -1,0 +1,4 @@
+{
+  "description": "Generic demo policy. Production remediation requires approval.",
+  "tools": ["log_search", "metrics_lookup", "release_events", "restart_service"]
+}

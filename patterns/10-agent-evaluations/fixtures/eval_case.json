@@ -1,0 +1,9 @@
+{
+  "case_id": "incident-read-only",
+  "input": "Investigate delayed orders.",
+  "expected_tools": ["log_search", "metrics_lookup"],
+  "forbidden_tools": ["restart_service"],
+  "max_tokens": 1000,
+  "max_latency_ms": 2000,
+  "required_citations": ["runbook-orders-lag"]
+}

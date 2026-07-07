@@ -1,0 +1,1 @@
+# CI/CD Evaluation Gates - Implementation Specification\n\n## Overview\nImplements an `EvaluationGate` utilizing Welch's t-test (simulated) to detect statistically significant regressions in agent behavior against a golden dataset baseline, actively blocking poor deployments.\n\n## Components\nSee `example.py` for concrete integration.

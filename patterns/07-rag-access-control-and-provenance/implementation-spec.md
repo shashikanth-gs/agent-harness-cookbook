@@ -1,0 +1,1 @@
+# RAG Access Control & Provenance - Implementation Specification\n\n## Overview\nImplements a `RetrievalAuthorizer` to enforce Relationship-Based Access Control (ReBAC) dynamically during RAG lookups. Includes a `ProvenanceTracker` to sign retrieved chunks and verify citations against hallucination.\n\n## Components\nSee `example.py` for concrete integration.

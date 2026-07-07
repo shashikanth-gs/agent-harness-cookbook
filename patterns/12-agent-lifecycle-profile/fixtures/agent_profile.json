@@ -1,0 +1,18 @@
+{
+  "agent_name": "service-incident-investigator",
+  "owner": "platform-operations",
+  "purpose": "Investigate generic service incidents using mock operational evidence.",
+  "prohibited_use": ["automatic production remediation without approval"],
+  "autonomy_tier": "assistive",
+  "risk_level": "medium",
+  "data_sources": ["mock_logs", "mock_metrics", "mock_release_events"],
+  "model_provider": "mock_or_litellm",
+  "tools": ["log_search", "metrics_lookup", "release_events"],
+  "memory_policy": "session_only",
+  "approval_policy": "required_for_high_risk_actions",
+  "eval_suite": ["policy", "redaction", "budget", "injection"],
+  "budget": { "max_model_calls": 3, "max_tool_calls": 6, "max_tokens": 1200 },
+  "audit_requirements": ["request", "tool_calls", "policy_decisions", "outcome"],
+  "retirement": { "owner_review_required": true, "delete_session_memory": true },
+  "status": "active"
+}

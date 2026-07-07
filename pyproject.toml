@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-harness-cookbook"
+version = "0.1.0"
+description = "A practical cookbook for designing enterprise-grade AI agent harnesses."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Agent Harness Cookbook contributors" }]
+dependencies = [
+  "fastapi>=0.116.0",
+  "litellm>=1.0.0",
+  "uvicorn[standard]>=0.35.0"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+  "httpx>=0.27.0"
+]
+
+[tool.setuptools.packages.find]
+where = [
+  "packages",
+  "patterns/01-tool-privilege-broker",
+  "patterns/02-hitl-approval-gate",
+  "patterns/03-decision-trace-and-audit",
+  "patterns/04-cost-and-tool-budgeting",
+  "patterns/05-redaction-boundary",
+  "patterns/06-prompt-injection-and-goal-hijack",
+  "patterns/07-rag-access-control-and-provenance",
+  "patterns/08-memory-isolation",
+  "patterns/09-sandboxed-execution",
+  "patterns/10-agent-evaluations",
+  "patterns/11-ci-cd-evaluation-gates",
+  "patterns/12-agent-lifecycle-profile"
+]
+
+[tool.pytest.ini_options]
+testpaths = [
+  "patterns/01-tool-privilege-broker/tests",
+  "patterns/02-hitl-approval-gate/tests",
+  "patterns/03-decision-trace-and-audit/tests",
+  "patterns/04-cost-and-tool-budgeting/tests",
+  "patterns/05-redaction-boundary/tests",
+  "patterns/06-prompt-injection-and-goal-hijack/tests",
+  "patterns/07-rag-access-control-and-provenance/tests",
+  "patterns/08-memory-isolation/tests",
+  "patterns/09-sandboxed-execution/tests",
+  "patterns/10-agent-evaluations/tests",
+  "patterns/11-ci-cd-evaluation-gates/tests",
+  "patterns/12-agent-lifecycle-profile/tests",
+  "tests"
+]
+pythonpath = [
+  "packages",
+  "patterns/01-tool-privilege-broker",
+  "patterns/02-hitl-approval-gate",
+  "patterns/03-decision-trace-and-audit",
+  "patterns/04-cost-and-tool-budgeting",
+  "patterns/05-redaction-boundary",
+  "patterns/06-prompt-injection-and-goal-hijack",
+  "patterns/07-rag-access-control-and-provenance",
+  "patterns/08-memory-isolation",
+  "patterns/09-sandboxed-execution",
+  "patterns/10-agent-evaluations",
+  "patterns/11-ci-cd-evaluation-gates",
+  "patterns/12-agent-lifecycle-profile"
+]

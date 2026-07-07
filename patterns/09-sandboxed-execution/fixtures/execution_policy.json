@@ -1,0 +1,7 @@
+{
+  "workspace_root": "/workspace/project",
+  "allowed_commands": ["python -m pytest", "npm test", "npm run build"],
+  "network": "disabled",
+  "timeout_seconds": 30,
+  "approval_required_commands": ["git push", "rm -rf", "deploy"]
+}

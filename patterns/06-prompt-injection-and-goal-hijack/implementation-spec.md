@@ -1,0 +1,1 @@
+# Prompt Injection & Goal Hijack - Implementation Specification\n\n## Overview\nImplements a dynamic `InstructionBoundary` using randomized XML tags to prevent spoofing, alongside a `SemanticAuditor` for upfront adversarial classification and a `TaskShield` for runtime alignment.\n\n## Components\nSee `example.py` for concrete integration.

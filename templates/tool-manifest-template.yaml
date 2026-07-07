@@ -1,0 +1,9 @@
+tools:
+  - name: example_tool
+    description: Describe what this tool does.
+    risk_level: low
+    allowed_roles:
+      - example-role
+    environments:
+      dev: allow
+      prod: approval_required

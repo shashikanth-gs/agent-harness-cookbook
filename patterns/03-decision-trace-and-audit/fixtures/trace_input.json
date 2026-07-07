@@ -1,0 +1,10 @@
+{
+  "user_request": "Investigate delayed orders for user jane@example.com",
+  "agent": "service-incident-investigator",
+  "tool_call": {
+    "tool": "log_search",
+    "parameters": {
+      "query": "account-user-abc123 delayed orders"
+    }
+  }
+}

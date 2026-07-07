@@ -1,0 +1,1 @@
+# Agent Lifecycle Profile - Implementation Specification\n\n## Overview\nImplements an `AgentManifest` acting as a secure identity passport for the agent. Binds operational limits (budgets, execution bounds) with a cryptographic signature verified by a `LifecycleManager` to prevent runtime tampering.\n\n## Components\nSee `example.py` for concrete integration.

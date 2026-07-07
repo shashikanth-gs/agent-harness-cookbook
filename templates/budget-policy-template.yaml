@@ -1,0 +1,7 @@
+max_model_calls: 4
+max_tool_calls: 8
+max_retries: 1
+max_execution_seconds: 60
+max_agent_handoffs: 1
+max_retrieved_documents: 5
+max_tokens: 4000

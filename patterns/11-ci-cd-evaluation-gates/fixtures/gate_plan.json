@@ -1,0 +1,12 @@
+{
+  "required_gates": [
+    "unit_tests",
+    "pattern_tests",
+    "golden_trajectory_evals",
+    "injection_evals",
+    "redaction_checks",
+    "policy_compliance",
+    "cost_regression"
+  ],
+  "max_cost_regression_percent": 10
+}

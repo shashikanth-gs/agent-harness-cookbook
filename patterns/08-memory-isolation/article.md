@@ -1,0 +1,1 @@
+# Memory Isolation\n\nEnterprise agents require robust safeguards. This pattern demonstrates:\n- Provides a `NamespaceMemoryManager` mimicking secure Redis behavior. Implements tiered memory (Working vs Episodic) with strict namespace isolation and TTL purging managed via a `TenantContextGateway`.\n\nExplore the implementation specification and example for a deep dive.

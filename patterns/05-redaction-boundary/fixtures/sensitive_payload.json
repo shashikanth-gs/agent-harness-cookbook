@@ -1,0 +1,7 @@
+{
+  "request": "Check order for alex@example.com and account-user-abc123",
+  "headers": {
+    "authorization": "Bearer abcdefghijklmnopqrstuvwxyz123456"
+  },
+  "payment_hint": "4111 1111 1111 1111"
+}

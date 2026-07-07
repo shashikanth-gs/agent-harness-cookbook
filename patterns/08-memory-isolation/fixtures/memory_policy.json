@@ -1,0 +1,8 @@
+{
+  "session": { "retention": "short", "requires_validation": false },
+  "user_preference": { "retention": "long", "requires_validation": true, "allowed_keys": ["timezone", "notification_channel", "language"] },
+  "task_state": { "retention": "task", "requires_validation": false },
+  "long_term_knowledge": { "retention": "long", "requires_validation": true },
+  "operational_memory": { "retention": "medium", "requires_validation": true },
+  "audit_record": { "retention": "immutable", "requires_validation": true }
+}

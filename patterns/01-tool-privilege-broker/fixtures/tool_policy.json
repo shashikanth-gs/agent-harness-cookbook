@@ -1,0 +1,30 @@
+{
+  "tools": {
+    "restart_service": {
+      "risk": "high",
+      "allowed_roles": ["ops-engineer"],
+      "allowed_parameters": {
+        "service": ["orders-api", "inventory-api"],
+        "environment": ["dev", "staging", "prod"]
+      },
+      "environments": {
+        "dev": "allow",
+        "staging": "allow",
+        "prod": "approval_required"
+      }
+    },
+    "read_logs": {
+      "risk": "low",
+      "allowed_roles": ["ops-engineer", "support-engineer"],
+      "allowed_parameters": {
+        "service": ["orders-api", "inventory-api"],
+        "window_minutes": [15, 30, 60]
+      },
+      "environments": {
+        "dev": "allow",
+        "staging": "allow",
+        "prod": "allow"
+      }
+    }
+  }
+}
