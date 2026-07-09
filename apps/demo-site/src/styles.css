@@ -135,6 +135,27 @@ textarea {
   font-weight: 600;
 }
 
+.segmented {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #cad3df;
+  border-radius: 8px;
+  margin: 4px 0 16px;
+  background: #f7f8fa;
+}
+
+.segmented button {
+  background: transparent;
+  color: #243244;
+  padding: 8px 12px;
+}
+
+.segmented button.active {
+  background: #0f766e;
+  color: white;
+}
+
 button {
   border: 0;
   border-radius: 8px;

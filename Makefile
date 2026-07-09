@@ -1,4 +1,4 @@
-.PHONY: setup test api site dev build provider-smoke quickstart
+.PHONY: setup test api site dev build provider-smoke nvidia-direct-smoke langgraph-litellm-smoke rag-litellm-embeddings-smoke quickstart
 
 setup:
 	python3 -m venv .venv
@@ -24,3 +24,12 @@ build:
 
 provider-smoke:
 	python scripts/smoke_provider.py
+
+nvidia-direct-smoke:
+	python scripts/smoke_nvidia_direct.py
+
+langgraph-litellm-smoke:
+	python scripts/smoke_langgraph_litellm.py
+
+rag-litellm-embeddings-smoke:
+	python scripts/smoke_rag_litellm_embeddings.py

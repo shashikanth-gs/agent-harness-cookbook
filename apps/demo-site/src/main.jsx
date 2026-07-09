@@ -23,6 +23,7 @@ function App() {
     "Orders are not being processed after the latest release. Investigate the likely cause and recommend next steps."
   );
   const [requestRemediation, setRequestRemediation] = useState(false);
+  const [workflow, setWorkflow] = useState("python");
   const [demo, setDemo] = useState(null);
   const [catalog, setCatalog] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -31,7 +32,11 @@ function App() {
   async function runDemo() {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/demos/service-incident-investigation", {
+      const endpoint =
+        workflow === "langgraph"
+          ? "http://localhost:8000/demos/service-incident-investigation/langgraph"
+          : "http://localhost:8000/demos/service-incident-investigation";
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ request, request_remediation: requestRemediation }),
@@ -115,6 +120,14 @@ function App() {
           />
           Include a remediation request
         </label>
+        <div className="segmented" aria-label="Workflow runtime">
+          <button className={workflow === "python" ? "active" : ""} onClick={() => setWorkflow("python")}>
+            Python
+          </button>
+          <button className={workflow === "langgraph" ? "active" : ""} onClick={() => setWorkflow("langgraph")}>
+            LangGraph
+          </button>
+        </div>
         <button onClick={runDemo} disabled={loading}>
           {loading ? "Running..." : "Run Demo"}
         </button>
@@ -123,6 +136,7 @@ function App() {
             <div>
               <h3>Outcome</h3>
               <p>{demo.result.summary}</p>
+              {demo.result.workflow && <p><strong>Workflow:</strong> {demo.result.workflow}</p>}
               <p><strong>Confidence:</strong> {demo.result.confidence}</p>
               <p><strong>Runbook:</strong> {demo.result.recommended_runbook}</p>
               {demo.result.remediation && (

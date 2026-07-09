@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 from agent_harness_cookbook.providers.litellm_sdk import LiteLLMSDKModel
 from agent_harness_cookbook.providers.mock_model import MockModel
+from agent_harness_cookbook.providers.nvidia_direct import NvidiaDirectChatModel
 
 
 class ModelProvider(Protocol):
@@ -21,4 +22,6 @@ def get_model_provider(provider: str | None = None) -> ModelProvider:
         return MockModel()
     if selected == "litellm":
         return LiteLLMSDKModel()
+    if selected in {"nvidia", "nvidia_direct"}:
+        return NvidiaDirectChatModel()
     raise ValueError(f"unknown provider: {selected}")

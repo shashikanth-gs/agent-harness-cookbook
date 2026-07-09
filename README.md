@@ -93,6 +93,57 @@ cp .env.example .env
 make dev
 ```
 
+For demonstration, this repo has been smoke-tested with NVIDIA NIM through
+LiteLLM:
+
+```bash
+AHC_PROVIDER=litellm
+AHC_MODEL=nvidia_nim/mistralai/mistral-medium-3.5-128b
+NVIDIA_NIM_API_KEY=...
+NVIDIA_NIM_API_BASE=https://integrate.api.nvidia.com/v1
+```
+
+This is only a demo configuration. For your own use cases, select the provider,
+deployment region, model, data controls, latency/cost profile, and governance
+settings that fit your requirements. LiteLLM is included so the cookbook can
+switch providers without changing harness code.
+
+Direct NVIDIA Python requests path, matching NVIDIA's OpenAI-compatible
+chat-completions API:
+
+```bash
+AHC_PROVIDER=nvidia_direct
+AHC_MODEL=mistralai/mistral-small-4-119b-2603
+NVIDIA_API_KEY=...
+NVIDIA_NIM_INVOKE_URL=https://integrate.api.nvidia.com/v1/chat/completions
+.venv/bin/python scripts/smoke_nvidia_direct.py
+```
+
+LangGraph use-case path with LiteLLM/NVIDIA:
+
+```bash
+AHC_PROVIDER=litellm
+AHC_MODEL=nvidia_nim/mistralai/mistral-small-4-119b-2603
+NVIDIA_NIM_API_KEY=...
+NVIDIA_NIM_API_BASE=https://integrate.api.nvidia.com/v1
+.venv/bin/python scripts/smoke_langgraph_litellm.py
+```
+
+RAG governance path with LiteLLM/NVIDIA embeddings:
+
+```bash
+AHC_PROVIDER=litellm
+AHC_EMBEDDING_PROVIDER=litellm
+AHC_EMBEDDING_MODEL=nvidia_nim/nvidia/nv-embedqa-e5-v5
+NVIDIA_NIM_API_KEY=...
+NVIDIA_NIM_API_BASE=https://integrate.api.nvidia.com/v1
+.venv/bin/python scripts/smoke_rag_litellm_embeddings.py
+```
+
+The demo model profile uses chat, embedding, rerank, and judge roles. Rerank is
+implemented as an optional provider slot and defaults to deterministic local
+rerank until a provider-specific rerank route is configured.
+
 Smoke test the configured provider:
 
 ```bash

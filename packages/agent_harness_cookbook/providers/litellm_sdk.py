@@ -16,15 +16,17 @@ class LiteLLMSDKModel:
 
     def complete(self, prompt: str) -> dict[str, object]:
         try:
+            import litellm
             from litellm import completion
         except ImportError as exc:
             raise RuntimeError(
                 "LiteLLM is not installed. Run `pip install -e .` or `pip install litellm`."
             ) from exc
+        litellm.drop_params = os.getenv("AHC_LITELLM_DROP_PARAMS", "true").lower() == "true"
 
-        response = completion(
-            model=self.model,
-            messages=[
+        completion_kwargs: dict[str, Any] = {
+            "model": self.model,
+            "messages": [
                 {
                     "role": "system",
                     "content": (
@@ -34,10 +36,16 @@ class LiteLLMSDKModel:
                 },
                 {"role": "user", "content": prompt},
             ],
-            temperature=0,
-            max_tokens=180,
-            timeout=self.timeout,
-        )
+            "temperature": float(os.getenv("AHC_TEMPERATURE", "0")),
+            "max_tokens": int(os.getenv("AHC_MAX_TOKENS", "180")),
+            "timeout": self.timeout,
+        }
+        if reasoning_effort := os.getenv("AHC_REASONING_EFFORT"):
+            completion_kwargs["reasoning_effort"] = reasoning_effort
+        if top_p := os.getenv("AHC_TOP_P"):
+            completion_kwargs["top_p"] = float(top_p)
+
+        response = completion(**completion_kwargs)
         content = _extract_content(response)
         total_tokens = _extract_total_tokens(response)
         return {

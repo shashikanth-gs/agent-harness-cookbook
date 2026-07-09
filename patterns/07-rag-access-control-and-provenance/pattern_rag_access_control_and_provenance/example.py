@@ -1,49 +1,82 @@
 from __future__ import annotations
 
-from agent_harness_cookbook.harness.rag_governance import (
-    ReBACPolicy,
-    RetrievedDocument,
-    RetrievalAuthorizer,
-    ProvenanceTracker,
-)
+import json
+from dataclasses import dataclass
+from pathlib import Path
 
-def run_example():
-    print("--- Pattern 07: RAG Access Control & Provenance Example ---\\n")
-    
-    # 1. ReBAC Enforcement
-    policy = ReBACPolicy(
-        user_id="user123",
-        roles=["responder"],
-        allowed_classifications=["public", "internal-runbook"],
-        incident_scope="INC-001"
-    )
-    authorizer = RetrievalAuthorizer(policy)
-    
-    docs = [
-        RetrievedDocument("doc1", "Server restart guide", "internal-runbook", "uri1", {"incident_id": "INC-001"}),
-        RetrievedDocument("doc2", "Customer PII data", "restricted-pii", "uri2", {"incident_id": "INC-001"}),
-        RetrievedDocument("doc3", "INC-002 logs", "internal-runbook", "uri3", {"incident_id": "INC-002"}),
-    ]
-    
-    print("Filtering documents based on ReBAC policy...")
-    filtered = authorizer.filter_documents(docs)
-    for d in filtered:
-        print(f"Authorized Document: {d.doc_id} ({d.classification})")
-    print()
-    
-    # 2. Provenance Tracking
-    print("Signing document chunks for provenance tracking...")
-    tracker = ProvenanceTracker("enterprise-secret-key-123")
-    signed_doc = tracker.sign_document(filtered[0])
-    
-    print(f"Signature generated: {signed_doc.provenance_signature}")
-    
-    # Agent tries to cite it
-    is_valid = tracker.verify_citation(signed_doc.doc_id, signed_doc.content, signed_doc.provenance_signature)
-    print(f"Citation verification (Valid Chunk): {is_valid}")
-    
-    is_forged = tracker.verify_citation(signed_doc.doc_id, "I made this up", signed_doc.provenance_signature)
-    print(f"Citation verification (Hallucinated Chunk): {is_forged}")
 
-if __name__ == "__main__":
-    run_example()
+FIXTURE_PATH = Path(__file__).resolve().parents[1] / "fixtures" / "documents.json"
+
+
+@dataclass(frozen=True)
+class Document:
+    doc_id: str
+    tenant: str
+    domain: str
+    acl: list[str]
+    lifecycle: str
+    title: str
+    content: str
+
+
+@dataclass(frozen=True)
+class RetrievalRequest:
+    query: str
+    tenant: str
+    user_roles: list[str]
+    domain: str | None = None
+
+
+def load_documents(path: Path = FIXTURE_PATH) -> list[Document]:
+    return [Document(**item) for item in json.loads(path.read_text())]
+
+
+def retrieve(request: RetrievalRequest, documents: list[Document] | None = None) -> list[dict[str, object]]:
+    documents = documents or load_documents()
+    terms = {term.strip("/{}.,").lower() for term in request.query.split() if len(term) > 2}
+    results: list[dict[str, object]] = []
+    for doc in documents:
+        if doc.tenant != request.tenant:
+            continue
+        if request.domain and doc.domain != request.domain:
+            continue
+        if doc.lifecycle != "active":
+            continue
+        if set(doc.acl).isdisjoint(request.user_roles):
+            continue
+        haystack = f"{doc.title} {doc.content}".lower()
+        score = sum(1 for term in terms if term in haystack)
+        if score:
+            results.append(
+                {
+                    "doc_id": doc.doc_id,
+                    "title": doc.title,
+                    "content": doc.content,
+                    "provenance": {
+                        "tenant": doc.tenant,
+                        "domain": doc.domain,
+                        "lifecycle": doc.lifecycle,
+                        "acl_checked": True,
+                    },
+                    "score": score,
+                }
+            )
+    return sorted(results, key=lambda item: int(item["score"]), reverse=True)
+
+
+def synthesize_answer(query: str, retrieved: list[dict[str, object]]) -> dict[str, object]:
+    citations = [item["doc_id"] for item in retrieved]
+    if not retrieved:
+        return {"answer": "No authorized active source was found.", "citations": [], "citation_valid": True}
+    first = retrieved[0]
+    return {
+        "answer": f"Use {first['title']}: {first['content']}",
+        "citations": citations,
+        "citation_valid": all(item["provenance"]["lifecycle"] == "active" for item in retrieved),
+        "query": query,
+    }
+
+
+def run_example() -> dict[str, object]:
+    results = retrieve(RetrievalRequest("orders api order_id", "retail", ["support"], "orders"))
+    return synthesize_answer("orders api order_id", results)
