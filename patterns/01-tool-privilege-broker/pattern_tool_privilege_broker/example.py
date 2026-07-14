@@ -25,5 +25,10 @@ def propose_restart(environment: str, user_roles: list[str] | None = None) -> Po
         tool_name="restart_service",
         parameters={"service": "orders-api", "environment": environment},
         environment=environment,
+        tenant="retail",
+        user_tenants=["retail"],
+        action_type="write",
+        resource="orders-api",
+        original_task="Diagnose orders DLQ issue.",
     )
     return ToolPrivilegeBroker(load_policy()).evaluate(request)

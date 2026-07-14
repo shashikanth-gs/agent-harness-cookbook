@@ -1,21 +1,35 @@
 {
+  "policy_version": "tool-policy-v2",
   "tools": {
     "restart_service": {
       "risk": "high",
       "allowed_roles": ["ops-engineer"],
+      "allowed_tenants": ["retail"],
+      "allowed_agents": ["ops-investigator"],
+      "allowed_child_agents": ["remediation-agent"],
+      "allowed_action_types": ["write"],
+      "allowed_resources": ["orders-api", "inventory-api"],
+      "purpose_terms": ["orders", "inventory", "dlq", "incident"],
+      "required_approver_role": "ops-lead",
       "allowed_parameters": {
         "service": ["orders-api", "inventory-api"],
         "environment": ["dev", "staging", "prod"]
       },
       "environments": {
         "dev": "allow",
-        "staging": "allow",
+        "staging": "approval_required",
         "prod": "approval_required"
       }
     },
     "read_logs": {
       "risk": "low",
       "allowed_roles": ["ops-engineer", "support-engineer"],
+      "allowed_tenants": ["retail", "marketplace"],
+      "allowed_agents": ["ops-investigator", "log-reader"],
+      "allowed_child_agents": ["log-reader"],
+      "allowed_action_types": ["read"],
+      "allowed_resources": ["orders-api", "inventory-api"],
+      "purpose_terms": ["orders", "inventory", "logs", "incident", "dlq"],
       "allowed_parameters": {
         "service": ["orders-api", "inventory-api"],
         "window_minutes": [15, 30, 60]
@@ -24,6 +38,41 @@
         "dev": "allow",
         "staging": "allow",
         "prod": "allow"
+      }
+    },
+    "delete_database": {
+      "risk": "critical",
+      "allowed_roles": ["database-admin"],
+      "allowed_tenants": ["retail"],
+      "allowed_agents": ["database-maintenance-agent"],
+      "allowed_action_types": ["destructive"],
+      "allowed_resources": ["orders-db"],
+      "destructive": true,
+      "allowed_parameters": {
+        "database": ["orders-db"]
+      },
+      "environments": {
+        "dev": "deny",
+        "staging": "deny",
+        "prod": "deny"
+      }
+    },
+    "export_customer_records": {
+      "risk": "critical",
+      "allowed_roles": ["privacy-admin"],
+      "allowed_tenants": ["retail"],
+      "allowed_agents": ["privacy-export-agent"],
+      "allowed_action_types": ["export"],
+      "allowed_resources": ["customer-profile"],
+      "purpose_terms": ["privacy", "customer", "export"],
+      "allowed_parameters": {
+        "tenant": ["retail"],
+        "format": ["csv"]
+      },
+      "environments": {
+        "dev": "deny",
+        "staging": "deny",
+        "prod": "approval_required"
       }
     }
   }
