@@ -1,0 +1,98 @@
+pattern: redaction-boundary
+control_points:
+  - redaction_boundary
+  - context_builder
+  - audit_sink
+  - eval_sink
+cases:
+  - id: RED-001
+    title: User input PII is masked before model context
+    ingress_surface: user_input
+    sensitive_values:
+      - email
+      - phone
+      - loyalty_id
+    expected_decision: allow_with_reduced_scope
+    audit_events:
+      - redaction.applied
+      - context.built
+    eval_assertion: Model context contains masked values and trace records redaction summary.
+  - id: RED-002
+    title: Tool response credentials are removed
+    ingress_surface: tool_result
+    sensitive_values:
+      - bearer_token
+      - api_key
+      - jwt
+      - connection_string
+    expected_decision: allow_with_reduced_scope
+    audit_events:
+      - tool.observed
+      - redaction.applied
+    eval_assertion: Credential-like strings do not enter model context, audit, or final output.
+  - id: RED-003
+    title: Cloud credential in error message is blocked
+    ingress_surface: error_message
+    sensitive_values:
+      - cloud_access_key
+      - secret_key
+    expected_decision: allow_with_reduced_scope
+    audit_events:
+      - error.captured
+      - redaction.applied
+    eval_assertion: Error payload is useful for debugging without exposing secrets.
+  - id: RED-004
+    title: Audit event stores redacted payload
+    ingress_surface: audit_event
+    sensitive_values:
+      - account_reference
+      - ticket_number
+      - internal_hostname
+    expected_decision: allow_with_reduced_scope
+    audit_events:
+      - redaction.applied
+      - audit.stored
+    eval_assertion: Audit storage receives masked values and a redaction summary.
+  - id: RED-005
+    title: Agent-to-agent message is sanitized
+    ingress_surface: agent_to_agent_message
+    sensitive_values:
+      - customer_identifier
+      - support_case_notes
+    expected_decision: allow_with_reduced_scope
+    audit_events:
+      - handoff.requested
+      - redaction.applied
+    eval_assertion: Delegated agents receive only the minimum safe context needed.
+  - id: RED-006
+    title: Memory write drops secrets
+    ingress_surface: memory_write
+    sensitive_values:
+      - api_key
+      - bearer_token
+    expected_decision: deny
+    audit_events:
+      - memory.write_requested
+      - redaction.secret_detected
+      - memory.write_denied
+    eval_assertion: Secrets are not persisted as memory even if useful for the current run.
+  - id: RED-007
+    title: False positive preserves operational meaning
+    ingress_surface: log_line
+    candidate_value: "order-4111111111111111-like-id"
+    expected_decision: allow_with_reduced_scope
+    audit_events:
+      - redaction.applied
+    eval_assertion: Masking does not remove the entire diagnostic signal when a value resembles a card.
+  - id: RED-008
+    title: Eval dataset is sanitized before reuse
+    ingress_surface: eval_dataset
+    sensitive_values:
+      - email
+      - ticket_number
+      - stack_trace_secret
+    expected_decision: allow_with_reduced_scope
+    audit_events:
+      - eval.case_created
+      - redaction.applied
+    eval_assertion: Production traces converted to eval cases do not carry raw sensitive values.

@@ -1,0 +1,81 @@
+pattern: agent-lifecycle-profile
+control_points:
+  - lifecycle_validator
+  - tool_privilege_broker
+  - approval_gate
+  - audit_sink
+cases:
+  - id: LIFE-001
+    title: Incomplete profile fails validation
+    ingress_surface: agent_registration
+    missing_fields:
+      - owner
+      - prohibited_use
+      - budget_policy
+    expected_decision: deny
+    audit_events:
+      - profile.validation_failed
+    eval_assertion: Agents cannot be promoted without required governance fields.
+  - id: LIFE-002
+    title: High-risk agent requires approval policy
+    ingress_surface: agent_registration
+    risk_level: high
+    approval_policy: null
+    expected_decision: deny
+    audit_events:
+      - profile.validation_failed
+    eval_assertion: High-risk agents must define approval boundaries before activation.
+  - id: LIFE-003
+    title: Retired agent cannot be selected
+    ingress_surface: agent_routing
+    status: retired
+    expected_decision: deny
+    audit_events:
+      - agent.selection_denied
+    eval_assertion: Runtime routing respects lifecycle status.
+  - id: LIFE-004
+    title: Retired agent has no active tools
+    ingress_surface: profile_update
+    status: retired
+    tools:
+      - log_search
+    expected_decision: deny
+    audit_events:
+      - profile.validation_failed
+    eval_assertion: Retirement removes active runtime capability.
+  - id: LIFE-005
+    title: Kill switch disables active agent
+    ingress_surface: operator_action
+    kill_switch_activated: true
+    expected_decision: deny
+    audit_events:
+      - kill_switch.activated
+      - agent.disabled
+    eval_assertion: Active agents stop being selectable after kill switch activation.
+  - id: LIFE-006
+    title: Prompt version change requires review
+    ingress_surface: profile_update
+    changed_field: prompt_version
+    expected_decision: approval_required
+    audit_events:
+      - profile.change_requested
+      - approval.requested
+    eval_assertion: Behavior-changing profile updates are reviewed before promotion.
+  - id: LIFE-007
+    title: Tool policy missing for declared tool
+    ingress_surface: profile_update
+    tool: rollback_deployment
+    tool_policy: null
+    expected_decision: deny
+    audit_events:
+      - profile.validation_failed
+    eval_assertion: Declared tools must have matching policy before runtime use.
+  - id: LIFE-008
+    title: Review cadence overdue escalates
+    ingress_surface: lifecycle_review
+    review_overdue: true
+    expected_decision: escalate
+    audit_events:
+      - review.overdue
+      - owner.escalated
+    eval_assertion: Long-lived agents require periodic owner review.

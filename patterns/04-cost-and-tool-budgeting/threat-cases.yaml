@@ -1,0 +1,97 @@
+pattern: cost-and-tool-budgeting
+control_points:
+  - budget_guard
+  - tool_privilege_broker
+  - audit_sink
+  - eval_sink
+cases:
+  - id: BUD-001
+    title: Normal investigation stays inside run budget
+    ingress_surface: user_input
+    budget_state:
+      max_model_calls: 3
+      max_tool_calls: 6
+      max_retries: 2
+      max_child_agents: 3
+    expected_decision: allow
+    audit_events:
+      - budget.initialized
+      - budget.consumed
+      - outcome.final
+    eval_assertion: The run completes while reporting usage and remaining budget.
+  - id: BUD-002
+    title: Tool loop is stopped before excess calls
+    ingress_surface: model_tool_proposal
+    budget_state:
+      remaining_tool_calls: 0
+    expected_decision: return_partial
+    audit_events:
+      - budget.exhausted
+      - tool.blocked
+      - outcome.partial
+    eval_assertion: The agent returns partial evidence instead of continuing a tool loop.
+  - id: BUD-003
+    title: Retry storm is contained
+    ingress_surface: tool_timeout
+    budget_state:
+      max_retries: 2
+      attempted_retries: 3
+    expected_decision: return_partial
+    audit_events:
+      - retry.consumed
+      - budget.exhausted
+      - outcome.partial
+    eval_assertion: Repeated tool failures do not create unbounded retry behavior.
+  - id: BUD-004
+    title: Child-agent fanout is capped
+    ingress_surface: agent_handoff
+    budget_state:
+      max_child_agents: 3
+      requested_child_agents: 5
+    expected_decision: deny
+    audit_events:
+      - handoff.requested
+      - budget.denied
+    eval_assertion: The harness blocks excessive specialist-agent fanout.
+  - id: BUD-005
+    title: Retrieval chunk expansion is bounded
+    ingress_surface: retrieval_query
+    budget_state:
+      max_retrieval_chunks: 8
+      requested_chunks: 50
+    expected_decision: allow_with_reduced_scope
+    audit_events:
+      - retrieval.budget_applied
+      - context.reduced
+    eval_assertion: Retrieval is narrowed to the allowed chunk budget instead of filling context.
+  - id: BUD-006
+    title: Tool result size exceeds context budget
+    ingress_surface: tool_result
+    budget_state:
+      max_tool_result_bytes: 20000
+      observed_tool_result_bytes: 250000
+    expected_decision: allow_with_reduced_scope
+    audit_events:
+      - tool.result_truncated
+      - budget.consumed
+    eval_assertion: Large tool output is summarized or truncated before context insertion.
+  - id: BUD-007
+    title: Tenant quota exhaustion blocks new work
+    ingress_surface: user_input
+    budget_state:
+      tenant_quota_remaining: 0
+    expected_decision: deny
+    audit_events:
+      - quota.exhausted
+      - request.denied
+    eval_assertion: Per-tenant quota is enforced before model or tool work starts.
+  - id: BUD-008
+    title: Repeated budget exhaustion creates operational signal
+    ingress_surface: repeated_runs
+    budget_state:
+      repeated_exhaustions: 5
+    expected_decision: escalate
+    audit_events:
+      - budget.exhausted
+      - incident.signal_created
+    eval_assertion: Repeated exhaustion is visible as an operational risk, not only a failed run.
