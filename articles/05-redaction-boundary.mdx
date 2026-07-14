@@ -1,0 +1,95 @@
+export const metadata = {
+  title: "Redaction Boundary",
+  description: "A working playground for masking sensitive values before prompts, tools, output, and audit records.",
+  keywords: ["agent harness", "redaction", "data protection", "llm security", "python"]
+}
+
+# Redaction Boundary
+
+Agents move data across boundaries: user input into model context, tool output into prompts, model output into UI, and event payloads into audit stores. Some of that data should not cross those boundaries raw.
+
+The Redaction Boundary pattern makes sanitization a harness behavior. The agent gets useful context. The model, logs, and display surfaces get a redacted version when raw values are not appropriate.
+
+## Playground
+
+Repo: [agent-harness-cookbook](https://github.com/shashikanth-gs/agent-harness-cookbook)
+
+Source files:
+
+- [example.py](https://github.com/shashikanth-gs/agent-harness-cookbook/blob/main/patterns/05-redaction-boundary/pattern_redaction_boundary/example.py)
+- [tests](https://github.com/shashikanth-gs/agent-harness-cookbook/tree/main/patterns/05-redaction-boundary/tests)
+- [redaction harness](https://github.com/shashikanth-gs/agent-harness-cookbook/blob/main/packages/agent_harness_cookbook/harness/redaction.py)
+- [implementation spec](https://github.com/shashikanth-gs/agent-harness-cookbook/blob/main/patterns/05-redaction-boundary/implementation-spec.md)
+
+## Flow
+
+```mermaid
+flowchart TD
+  A[Raw user input] --> R[redact]
+  B[Retrieved context] --> R
+  C[Tool result] --> R
+  R --> D[Prompt-safe payload]
+  R --> E[Audit-safe payload]
+  R --> F[Display-safe payload]
+```
+
+## Code
+
+The example redacts a nested payload with an email, account reference, bearer token, API key, and card-like value.
+
+```python
+from pattern_redaction_boundary import redact_demo_payload
+
+redacted = redact_demo_payload()
+
+assert "[REDACTED:EMAIL]" in redacted["input"]
+assert "[REDACTED:BEARER_TOKEN]" in redacted["tool_result"]["headers"]["authorization"]
+```
+
+The same recursive redactor handles strings, lists, and dictionaries.
+
+```python
+payload = {
+    "input": "Investigate order failure for alex@example.com",
+    "tool_result": {
+        "headers": {"authorization": "Bearer abcdefghijklmnopqrstuvwxyz123456"},
+        "payment_hint": "4111 1111 1111 1111",
+    },
+}
+```
+
+## What Is Enforced
+
+The harness masks emails, API-like keys, bearer tokens, account references, passenger or user references, and credit-card-like values. The original payload is not mutated.
+
+This is important for agent systems because redaction at display time is too late if raw values already entered a model prompt or audit event.
+
+## Verification Scenarios
+
+```bash
+.venv/bin/python -m pytest -q patterns/05-redaction-boundary/tests
+```
+
+These tests exercise redaction before data crosses a boundary:
+
+- Email addresses and account references are masked in user-facing text.
+- Bearer tokens, API-like keys, and card-like values are masked inside nested tool results.
+- Nested dictionaries are handled recursively, which is important because tool responses rarely arrive as flat strings.
+
+What this proves: sensitive values in the playground payload are replaced before they are used in safer contexts such as prompts, display, or audit.
+
+What this does not prove: it does not prove complete PII detection for every domain. Production systems should extend the recognizers for their own identifiers.
+
+## When to Use It
+
+Use this whenever prompts, tool results, traces, or UI outputs can contain sensitive data.
+
+Do not confuse redaction with authorization. Authorization decides whether data may be retrieved. Redaction decides how data may cross a boundary once it exists.
+
+## See Also
+
+- [Decision Trace and Audit](./03-decision-trace-and-audit.mdx)
+- [RAG Access Control and Provenance](./07-rag-access-control-and-provenance.mdx)
+- [Prompt Injection and Goal Hijacking](./06-prompt-injection-and-goal-hijack.mdx)
+
+`agent-harness` `redaction` `data-boundary`

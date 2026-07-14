@@ -1,0 +1,110 @@
+export const metadata = {
+  title: "Agent Evaluations",
+  description: "A working playground for evaluating agent trajectories, policies, citations, safety, and cost.",
+  keywords: ["agent harness", "agent evaluations", "trajectory evaluation", "llm testing", "python"]
+}
+
+# Agent Evaluations
+
+Checking only the final answer misses many agent failures. An answer can look acceptable while the run used the wrong tool, skipped a citation, leaked sensitive data, violated policy, or exceeded budget.
+
+Agent Evaluations scores the trajectory, not just the last message.
+
+## Playground
+
+Repo: [agent-harness-cookbook](https://github.com/shashikanth-gs/agent-harness-cookbook)
+
+Source files:
+
+- [example.py](https://github.com/shashikanth-gs/agent-harness-cookbook/blob/main/patterns/10-agent-evaluations/pattern_agent_evaluations/example.py)
+- [tests](https://github.com/shashikanth-gs/agent-harness-cookbook/tree/main/patterns/10-agent-evaluations/tests)
+- [implementation spec](https://github.com/shashikanth-gs/agent-harness-cookbook/blob/main/patterns/10-agent-evaluations/implementation-spec.md)
+
+## Flow
+
+```mermaid
+flowchart TD
+  A[EvalCase] --> C[TrajectoryEvaluator.evaluate]
+  B[Agent trajectory] --> C
+  C --> D[Final answer quality]
+  C --> E[Groundedness and citations]
+  C --> F[Tool selection]
+  C --> G[Policy and approval behavior]
+  C --> H[Sensitive data and injection resistance]
+  C --> I[Cost and latency]
+  D --> J[EvalResult]
+  E --> J
+  F --> J
+  G --> J
+  H --> J
+  I --> J
+```
+
+## Code
+
+Each case defines expected tools, forbidden tools, limits, and required citations.
+
+```python
+from pattern_agent_evaluations import EvalCase, TrajectoryEvaluator
+
+case = EvalCase(
+    case_id="demo",
+    expected_tools=["log_search"],
+    forbidden_tools=["restart_service"],
+    max_tokens=800,
+    max_latency_ms=2000,
+    required_citations=["runbook-orders-lag"],
+)
+
+trajectory = {
+    "final_answer": "Likely release issue.",
+    "tools": ["log_search"],
+    "tool_calls": [{"valid_parameters": True}],
+    "citations": ["runbook-orders-lag"],
+    "policy_violations": 0,
+    "contains_sensitive_data": False,
+    "goal_preserved": True,
+    "tokens": 300,
+    "latency_ms": 200,
+}
+
+result = TrajectoryEvaluator().evaluate(case, trajectory)
+assert result.passed is True
+```
+
+## What Is Evaluated
+
+The evaluator checks final answer quality, groundedness, expected tools, forbidden tools, parameter correctness, policy compliance, approval behavior, sensitive data leakage, prompt injection resistance, and cost/latency.
+
+This is why traces matter. A final answer alone cannot prove these properties.
+
+## Verification Scenarios
+
+```bash
+.venv/bin/python -m pytest -q patterns/10-agent-evaluations/tests
+```
+
+These tests exercise trajectory-level evaluation:
+
+- A good trajectory passes when it uses the expected tool, avoids forbidden tools, cites required sources, stays within limits, and preserves policy.
+- A trajectory fails when it uses a forbidden tool or misses required citation.
+- Tool efficiency tests check whether the agent used the expected level of tool work.
+- Plan adherence and safety tests cover behavior that the final answer alone cannot prove.
+
+What this proves: the evaluator checks how the answer was produced, not only whether the final text looks plausible.
+
+What this does not prove: these cases are not a complete eval suite for every agent. They are a working seed set showing how to turn trace properties into checks.
+
+## When to Use It
+
+Use this before an agent becomes part of a workflow other people depend on. Start with a small golden set, then grow it from traces and incidents.
+
+Do not wait until production to define what acceptable behavior means.
+
+## See Also
+
+- [Decision Trace and Audit](./03-decision-trace-and-audit.mdx)
+- [CI/CD Evaluation Gates](./11-ci-cd-evaluation-gates.mdx)
+- [Prompt Injection and Goal Hijacking](./06-prompt-injection-and-goal-hijack.mdx)
+
+`agent-harness` `evaluations` `trajectory-testing`
