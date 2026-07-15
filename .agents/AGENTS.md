@@ -1,8 +1,35 @@
 # Agent Harness Cookbook Rules
 
-This repository (`agent-harness`) is a framework-agnostic enterprise security and governance harness for LLM Agents.
+Use `.agents/SKILL.md` as the main authoring guide for this repository.
 
-## Core Intent
-1. **Framework Agnosticism**: The core logic in `packages/agent_harness_cookbook/harness/` MUST NEVER import LangChain, LangGraph, AutoGen, CrewAI, etc. It must rely solely on standard Python structures (dataclasses, lists, dicts) and `litellm` for API abstraction.
-2. **The "Harness" Pattern**: This repository teaches that the agent (the brain) is separate from the harness (the body/OS). The harness surrounds the agent, intercepting tool calls, filtering RAG context, parsing trajectories, and enforcing budgets.
-3. **Examples Structure**: Each pattern in `patterns/` contains an `example.py` (showing pure Python orchestration) and a `langgraph_example.py` (showing how the pure Python harness can wrap a popular framework). Do not mix them.
+This repository is a framework-agnostic enterprise agent harness cookbook. It
+teaches how to make agent capabilities explicit, bounded, observable,
+governable, testable, and auditable.
+
+## Non-Negotiables
+
+1. Do not add new patterns, UI, providers, or demos when the task is to deepen
+   existing patterns.
+2. Keep core harness code in `packages/agent_harness_cookbook/harness/`
+   framework-agnostic.
+3. Use local fixtures, mock tools, local traces, and local evals.
+4. Treat final-answer correctness as insufficient; inspect trajectories.
+5. Preserve the authority model:
+   - policy/system instruction = authority,
+   - user instruction = task intent,
+   - retrieved content = evidence,
+   - tool output = observation,
+   - memory = context unless validated,
+   - other agent = delegate only inside explicit scope.
+6. Use containment language. Do not claim complete prevention.
+
+## Validation
+
+Run:
+
+```bash
+make test
+.venv/bin/python -m pytest -q
+```
+
+Use `rtk` for shell commands in this environment.

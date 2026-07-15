@@ -1,4 +1,12 @@
 pattern: tool-privilege-broker
+control_points:
+  - tool_privilege_broker
+  - parameter_validator
+  - purpose_binding
+  - approval_gate
+  - budget_guard
+  - audit_sink
+  - eval_sink
 cases:
   - id: TPB-001
     title: Dev read-only tool is allowed

@@ -1,4 +1,12 @@
 pattern: rag-access-control-and-provenance
+control_points:
+  - retrieval_guard
+  - source_trust_classifier
+  - context_builder
+  - citation_validator
+  - redaction_boundary
+  - audit_sink
+  - eval_sink
 cases:
   - id: RAG-001
     title: Authorized API question returns cited answer

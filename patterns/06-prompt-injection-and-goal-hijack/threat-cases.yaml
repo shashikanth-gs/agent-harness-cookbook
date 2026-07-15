@@ -1,4 +1,14 @@
 pattern: prompt-injection-and-goal-hijack
+control_points:
+  - input_guard
+  - source_trust_classifier
+  - instruction_data_separator
+  - context_builder
+  - tool_privilege_broker
+  - approval_gate
+  - memory_write_gate
+  - audit_sink
+  - eval_sink
 cases:
   - id: PI-001
     title: Direct user injection is detected and contained

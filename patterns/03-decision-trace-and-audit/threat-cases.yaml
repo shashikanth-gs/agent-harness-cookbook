@@ -1,4 +1,10 @@
 pattern: decision-trace-and-audit
+control_points:
+  - decision_trace
+  - audit_sink
+  - redaction_boundary
+  - trace_schema_validator
+  - eval_sink
 cases:
   - id: AUD-001
     title: Normal successful run is reconstructable

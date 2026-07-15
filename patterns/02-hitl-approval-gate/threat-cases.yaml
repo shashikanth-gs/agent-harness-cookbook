@@ -1,4 +1,11 @@
 pattern: hitl-approval-gate
+control_points:
+  - approval_gate
+  - action_hash_validator
+  - approver_policy
+  - tool_privilege_broker
+  - audit_sink
+  - eval_sink
 cases:
   - id: HITL-001
     title: Low-risk action proceeds without approval

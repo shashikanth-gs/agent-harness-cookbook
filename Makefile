@@ -8,7 +8,7 @@ setup:
 quickstart: setup dev
 
 test:
-	pytest
+	.venv/bin/python -m pytest -q
 
 api:
 	uvicorn apps.api.main:app --reload --port 8000
