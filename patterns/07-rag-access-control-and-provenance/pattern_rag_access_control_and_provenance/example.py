@@ -4,6 +4,8 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from agent_harness_cookbook.harness.redaction import redact_text
+
 
 FIXTURE_PATH = Path(__file__).resolve().parents[1] / "fixtures" / "documents.json"
 
@@ -70,7 +72,7 @@ def synthesize_answer(query: str, retrieved: list[dict[str, object]]) -> dict[st
         return {"answer": "No authorized active source was found.", "citations": [], "citation_valid": True}
     first = retrieved[0]
     return {
-        "answer": f"Use {first['title']}: {first['content']}",
+        "answer": f"Use {first['title']}: {redact_text(str(first['content']))}",
         "citations": citations,
         "citation_valid": all(item["provenance"]["lifecycle"] == "active" for item in retrieved),
         "query": query,

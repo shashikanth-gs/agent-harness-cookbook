@@ -16,7 +16,66 @@ jobs:
         with:
           node-version: "22"
       - run: python -m pip install --upgrade pip
-      - run: pip install -e ".[dev]"
-      - run: pytest
+      - run: python -m pip install -e ".[dev]"
+      - run: python -m pytest -q
+      - run: python -m compileall packages patterns
+      - name: Parse project and threat-case metadata
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import tomllib
+          import yaml
+
+          tomllib.loads(Path("pyproject.toml").read_text())
+
+          required = {
+              "pattern",
+              "control_points",
+              "cases",
+          }
+          case_required = {
+              "id",
+              "title",
+              "ingress_surface",
+              "benign_goal",
+              "malicious_content",
+              "propagation_path",
+              "expected_controls",
+              "expected_decision",
+              "audit_events",
+              "eval_assertion",
+              "residual_risk",
+          }
+          allowed_decisions = {
+              "allow",
+              "deny",
+              "approval_required",
+              "allow_with_reduced_scope",
+              "return_partial",
+              "escalate",
+          }
+
+          top_five = {
+              Path("patterns/06-prompt-injection-and-goal-hijack/threat-cases.yaml"),
+              Path("patterns/01-tool-privilege-broker/threat-cases.yaml"),
+              Path("patterns/07-rag-access-control-and-provenance/threat-cases.yaml"),
+              Path("patterns/02-hitl-approval-gate/threat-cases.yaml"),
+              Path("patterns/03-decision-trace-and-audit/threat-cases.yaml"),
+          }
+
+          for path in sorted(Path("patterns").glob("**/threat-cases.yaml")):
+              data = yaml.safe_load(path.read_text())
+              if path not in top_five:
+                  continue
+              missing = required - set(data or {})
+              if missing:
+                  raise SystemExit(f"{path}: missing top-level keys {sorted(missing)}")
+              for case in data["cases"]:
+                  missing_case = case_required - set(case)
+                  if missing_case:
+                      raise SystemExit(f"{path}: {case.get('id', '<unknown>')} missing {sorted(missing_case)}")
+                  if case["expected_decision"] not in allowed_decisions:
+                      raise SystemExit(f"{path}: invalid decision {case['expected_decision']}")
+          PY
       - run: npm --prefix apps/demo-site install
       - run: npm --prefix apps/demo-site run build
