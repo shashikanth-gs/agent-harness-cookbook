@@ -56,3 +56,8 @@ Evals should inspect the trajectory:
 - did rejection stop the graph,
 - did replay fail when action hash changed,
 - did broker revalidation happen after approval.
+
+## References
+
+- NIST AI Risk Management Framework — human oversight as a core governance function. https://www.nist.gov/artificial-intelligence/ai-risk-management-framework
+- OWASP Top 10 for Agentic Applications (2025) — Agent Goal Hijack (ASI01) and the need for deterministic approval controls. https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/

@@ -286,3 +286,9 @@ and complex multi-agent information flow.
 The useful claim is narrower: non-authoritative text should not become authority
 without passing deterministic harness controls, and the trace should show what
 was contained.
+
+## References
+
+- Simon Willison — prompt injection as the SQL injection of the AI era; the lethal trifecta and Agents Rule of Two. https://simonwillison.net/series/prompt-injection/
+- Google DeepMind — Defeating Prompt Injections by Design (2025). https://deepmind.google/blog/investing-in-multi-agent-ai-safety-research/
+- The Attack and Defense Landscape of Agentic AI — comprehensive survey of injection attacks and defenses. https://arxiv.org/abs/2603.11088

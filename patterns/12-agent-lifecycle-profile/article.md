@@ -25,3 +25,9 @@ The lifecycle state cannot just be a comment in the code. It must be a verifiabl
 
 ### Delegation Boundaries
 A parent agent in the `active` state must not be allowed to delegate to a child agent in the `development` state within a production environment. The harness must validate the lifecycle profile of the entire actor chain.
+
+## References
+
+- NIST AI Agent Standards Initiative (2026) — purpose-built governance guidance for autonomous systems. https://www.nist.gov/artificial-intelligence/ai-risk-management-framework
+- AIP: Agent Identity Protocol — verifiable delegation across MCP and A2A. https://arxiv.org/abs/2603.24775
+- Skill-Mediated LLM Agents — architectural patterns for agent skill governance. https://arxiv.org/abs/2606.20631

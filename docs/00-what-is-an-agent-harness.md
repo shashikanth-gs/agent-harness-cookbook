@@ -59,6 +59,13 @@ It is designed to fit alongside LangGraph, OpenAI Agents SDK, Deep Agents,
 Semantic Kernel, CrewAI, AutoGen, or custom runtimes. It is not a replacement
 for them.
 
+The 12 patterns here are a starting set of harness-layer controls, not an
+exhaustive list. They apply across domains — the reference demo uses a service
+incident investigation scenario, but the same patterns work for healthcare
+clinical decision support, financial compliance, legal contract review, customer
+service, and DevOps automation. See
+[Use-Case Scenarios](use-case-scenarios.md) for concrete examples.
+
 ## What This Repo Is Not
 
 This repo is not a guarantee of agent safety. It does not claim to fully prevent
@@ -67,3 +74,10 @@ prompt injection, data leakage, unsafe tool use, or operational failure.
 The goal is narrower and more useful: reduce blast radius, contain failure,
 detect and record unsafe behavior, require deterministic validation for risky
 actions, and leave a trace that can be evaluated.
+
+These patterns address the harness layer. A production agent deployment also
+requires API gateways, identity federation (OAuth 2.0, OIDC), user principal
+propagation through tool calls to backend systems, secret management, network
+security, and compliance framework integration. See
+[What This Cookbook Does Not Cover](what-this-cookbook-does-not-cover.md) and
+[Identity and Principal Propagation](identity-and-principal-propagation.md).

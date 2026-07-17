@@ -134,3 +134,16 @@ For any significant run, the organization should be able to answer:
 - What budget was consumed?
 - What final status was returned?
 - What residual risk remains?
+
+## Beyond the Harness
+
+This threat model focuses on harness-layer risks. Production systems face
+additional threats at the infrastructure layer — API gateway bypass, identity
+federation failures, credential leakage from vaults, network segmentation
+violations — that are outside the harness boundary. See
+[What This Cookbook Does Not Cover](what-this-cookbook-does-not-cover.md) and
+[Identity and Principal Propagation](identity-and-principal-propagation.md).
+
+The harness patterns apply across domains. See
+[Use-Case Scenarios](use-case-scenarios.md) for how risk dimensions vary between
+healthcare, finance, legal, customer service, and DevOps agents.

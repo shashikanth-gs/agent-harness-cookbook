@@ -13,3 +13,15 @@ Good contributions usually include:
 
 Avoid adding mandatory cloud services, real enterprise system names, real
 secrets, or provider-specific assumptions unless they are clearly optional.
+
+## Scope and Cross-References
+
+When adding or modifying patterns, keep the scope framing consistent:
+
+- Each pattern should include a `what-this-does-not-solve.md` file.
+- Reference [What This Cookbook Does Not Cover](docs/what-this-cookbook-does-not-cover.md)
+  for enterprise concerns beyond the harness.
+- Reference [Use-Case Scenarios](docs/use-case-scenarios.md) if the pattern
+  applies differently across domains.
+- Reference [Identity and Principal Propagation](docs/identity-and-principal-propagation.md)
+  for patterns that involve identity, role, or tenant checks.

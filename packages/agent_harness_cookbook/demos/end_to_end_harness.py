@@ -1,3 +1,11 @@
+"""End-to-end harness demo composing all 12 patterns.
+
+The service incident scenario is one illustrative use case. These patterns
+are a starting set of harness-layer controls — production deployments also
+require infrastructure beyond the harness. See
+docs/what-this-cookbook-does-not-cover.md for the broader enterprise stack.
+"""
+
 from __future__ import annotations
 
 from dataclasses import asdict

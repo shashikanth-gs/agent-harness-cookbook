@@ -20,3 +20,8 @@ Static evaluation datasets degrade over time as models learn them. CI pipelines 
 
 ### Artifact Tracking (Traceability)
 When an evaluation fails in CI, the raw LangGraph trace (the sequence of agent thoughts, tool calls, and intercepted decisions) must be saved as a build artifact. A developer cannot debug an agentic failure without the full trajectory of what the LLM attempted to do.
+
+## References
+
+- Agent Audit — static and CI scanning for agent code, credentials, and privilege paths. https://arxiv.org/abs/2603.22853
+- MonitoringBench — semi-automated red-teaming for agent monitoring. https://arxiv.org/abs/2605.09684

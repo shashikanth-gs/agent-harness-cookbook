@@ -1,3 +1,9 @@
+"""Service incident investigation demo (LangGraph variant).
+
+This scenario is one illustrative use case. The same harness patterns apply
+across domains. See docs/use-case-scenarios.md for cross-domain examples.
+"""
+
 from __future__ import annotations
 
 from dataclasses import asdict
