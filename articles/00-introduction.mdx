@@ -1,0 +1,133 @@
+export const metadata = {
+  title: "Agent Harness Cookbook: Introduction",
+  description: "A working playground for understanding why agents need a harness layer and what these patterns cover.",
+  keywords: ["agent harness", "enterprise agents", "agent safety", "agent security", "python"],
+};
+
+# Agent Harness Cookbook: Introduction
+
+AI agents that call tools, retrieve documents, remember context, and act on
+behalf of users need more than a good prompt and a capable model. They need a
+harness — the layer of deterministic controls that decides what the agent may
+read, call, remember, approve, execute, log, and return.
+
+This article series covers 12 harness patterns. They are a starting set, not an
+exhaustive list. A production enterprise agent deployment requires additional
+infrastructure — API gateways, identity federation, secret management, network
+security, compliance integration — that these patterns do not address. See the
+[companion document](https://github.com/shashikanth-gs/agent-harness-cookbook/blob/main/docs/what-this-cookbook-does-not-cover.md)
+for the broader picture.
+
+## Why a Harness
+
+Frameworks like LangGraph, OpenAI Agents SDK, Semantic Kernel, CrewAI, and
+AutoGen help you build agent loops: prompts, tools, memory, state, handoffs.
+A harness decides how those capabilities are controlled.
+
+The distinction matters because:
+
+- Not all text has equal authority. A retrieved document is evidence, not an
+  instruction. A tool result is an observation, not permission to act. The
+  harness enforces this hierarchy deterministically, outside the model.
+
+- Final-answer safety is insufficient. An agent can produce a correct final
+  answer after attempting an unsafe intermediate action. Harness controls catch
+  unsafe behavior mid-trajectory, not just at the output.
+
+- Model-level guardrails alone are insufficient. Research from Stanford's
+  Trustworthy AI Lab showed fine-tuning attacks bypass model-level safety in
+  57-72% of cases. Deterministic policy checks outside the model are necessary.
+
+## The 12 Patterns
+
+| # | Pattern | What it controls |
+|---|---------|-----------------|
+| 01 | Tool Privilege Broker | Whether a tool call is allowed given identity, role, tenant, environment, and purpose |
+| 02 | HITL Approval Gate | Pausing risky actions for exact-action human approval |
+| 03 | Decision Trace and Audit | Recording what happened during a run for review and evaluation |
+| 04 | Cost and Tool Budgeting | Preventing runaway loops and resource exhaustion |
+| 05 | Redaction Boundary | Preventing sensitive data from crossing model/tool boundaries |
+| 06 | Prompt Injection and Goal Hijack | Keeping untrusted content from becoming authority |
+| 07 | RAG Access Control and Provenance | Authorizing retrieved content and preserving citations |
+| 08 | Memory Isolation | Keeping memory scoped to the right tenant, user, task, and agent |
+| 09 | Sandboxed Execution | Running generated code without trusting the host |
+| 10 | Agent Evaluations | Testing trajectories, not only final answers |
+| 11 | CI/CD Evaluation Gates | Blocking regressions before deployment |
+| 12 | Agent Lifecycle Profile | Binding runtime behavior to agent identity and lifecycle |
+
+## Not Just One Scenario
+
+The cookbook's reference implementation uses a service incident investigation
+scenario: an SRE agent investigating why orders are not being processed. But
+these patterns apply across domains:
+
+- **Healthcare:** clinical decision support agents reviewing patient records,
+  where redaction (Pattern 05) and memory isolation (Pattern 08) protect PHI.
+- **Finance:** compliance agents processing transactions, where audit trails
+  (Pattern 03) and evaluation gates (Pattern 11) satisfy regulatory requirements.
+- **Legal:** contract review agents, where RAG access control (Pattern 07) and
+  memory isolation (Pattern 08) enforce matter separation.
+- **Customer service:** support agents handling refunds, where cost budgeting
+  (Pattern 04) and approval gates (Pattern 02) cap automated financial actions.
+- **DevOps:** code review agents, where sandboxed execution (Pattern 09) and
+  injection defense (Pattern 06) protect against adversarial code.
+
+The harness code is domain-agnostic. What changes between scenarios is the
+policy configuration: which tools exist, which roles can use them, and what data
+must be protected.
+
+## What This Series Does Not Cover
+
+These patterns address the harness layer. A production agent deployment also
+requires:
+
+- API gateway and edge security,
+- identity federation (OAuth 2.0, OIDC, SAML),
+- user principal and role propagation through tool calls to backend systems,
+- secret management for tool credentials,
+- network segmentation and service mesh,
+- data residency and compliance framework integration,
+- incident response runbooks for agent-caused failures.
+
+The harness is a necessary but not sufficient layer.
+
+## Alignment with Industry Standards
+
+These patterns are informed by:
+
+- **OWASP Top 10 for Agentic Applications** (December 2025) — agent-specific
+  risks including Goal Hijack and Tool Misuse.
+- **NIST AI Risk Management Framework** and the AI Agent Standards Initiative
+  (February 2026).
+- **Simon Willison's Lethal Trifecta** — if a system has access to private data,
+  exposure to untrusted content, and a way to act, it is vulnerable.
+- **Google DeepMind AI Control Roadmap** (June 2026) — monitoring, access
+  controls, and blocking mechanisms for deployed agents.
+- **Stanford Trustworthy AI Research** — model-level guardrails alone are
+  insufficient for production safety.
+
+See the [Source Landscape](https://github.com/shashikanth-gs/agent-harness-cookbook/blob/main/docs/source-landscape.md)
+for the full reference list.
+
+## How to Use These Articles
+
+Each article in this series follows the same structure:
+
+1. **Playground** — links to the source code in the repository.
+2. **Flow** — a Mermaid diagram showing the pattern's decision flow.
+3. **Code** — working Python examples with assertions.
+4. **What Is Enforced** — the deterministic contract.
+5. **Verification Scenarios** — how to test the pattern.
+6. **When to Use It** — practical guidance.
+7. **See Also** — cross-references to related patterns.
+
+The code examples require the repository's Python packages to run. Clone the
+repo and run `make setup` to get started.
+
+## See Also
+
+- [./01-tool-privilege-broker.mdx](./01-tool-privilege-broker.mdx)
+- [./06-prompt-injection-and-goal-hijack.mdx](./06-prompt-injection-and-goal-hijack.mdx)
+- [./02-hitl-approval-gate.mdx](./02-hitl-approval-gate.mdx)
+
+`agent-harness` `enterprise-agents` `agent-safety` `harness-patterns` `python`

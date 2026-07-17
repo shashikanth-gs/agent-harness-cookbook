@@ -18,6 +18,8 @@ import "./styles.css";
 
 const API_BASE = "http://localhost:8000";
 
+const REPO_BASE = "https://github.com/shashikanth-gs/agent-harness-cookbook";
+
 const patternCatalog = [
   { id: "01", key: "01-tool-privilege-broker", name: "Tool Privilege Broker", detail: "Tool calls are checked against role, tenant, resource, action, and environment policy." },
   { id: "02", key: "02-hitl-approval-gate", name: "HITL Approval Gate", detail: "Risky actions pause with an approval request bound to the exact action hash." },
@@ -251,8 +253,9 @@ function App() {
             <h2>Try an Incident Request</h2>
           </div>
           <p className="muted">
-            Type an incident request and run a local simulation. The result is not a real production action;
-            it shows which harness controls fire while the agent investigates.
+            This service incident scenario is one illustrative use case. The same harness patterns apply
+            to healthcare, finance, legal, customer service, DevOps, and any domain where an agent acts
+            with tools and retrieval. Type a request and run a local simulation to see which controls fire.
           </p>
 
           <label>
@@ -452,6 +455,10 @@ function App() {
                 <div>
                   <h3>{name}</h3>
                   <p>{detail}</p>
+                  <div className="patternLinks">
+                    <a href={`${REPO_BASE}/blob/main/patterns/${key}/README.md`} target="_blank" rel="noopener noreferrer">Docs</a>
+                    <a href={`${REPO_BASE}/blob/main/articles/${id}-${key.slice(3)}.mdx`} target="_blank" rel="noopener noreferrer">Article</a>
+                  </div>
                   {catalog && <StatusPill status={passed === false ? "failed" : "ok"} />}
                 </div>
               </article>

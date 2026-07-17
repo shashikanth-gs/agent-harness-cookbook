@@ -10,6 +10,13 @@ threat cases, reference implementations, eval cases, and implementation specs
 for making agent capabilities explicit, bounded, observable, governable,
 testable, and auditable.
 
+**These 12 patterns are a necessary but not sufficient starting set.** A
+production agent deployment also requires API gateways, identity federation,
+principal propagation through tool calls, secret management, network security,
+and compliance integration. See
+[What This Cookbook Does Not Cover](docs/what-this-cookbook-does-not-cover.md)
+for the broader enterprise stack.
+
 Use this repo when you already know how to build an agent and need to answer:
 
 > What must sit around the agent so its tools, memory, retrieval, approvals,
@@ -78,6 +85,10 @@ writes, redaction, sandboxing, audit, and evaluation.
 | Adoption maturity | [Adoption Levels](docs/06-adoption-levels.md) |
 | Trajectory evaluation | [Trajectory Safety](docs/07-trajectory-safety.md) and [Evaluation Philosophy](docs/evaluation-philosophy.md) |
 | Provider adapters | [Provider Gateway and LiteLLM](docs/08-provider-gateway-and-litellm.md) |
+| Identity propagation | [Identity and Principal Propagation](docs/identity-and-principal-propagation.md) |
+| Beyond the harness | [What This Cookbook Does Not Cover](docs/what-this-cookbook-does-not-cover.md) |
+| Use-case scenarios | [Use-Case Scenarios](docs/use-case-scenarios.md) |
+| Source references | [Source Landscape](docs/source-landscape.md) |
 | Coding-agent usage | [How to Use This Repo With Coding Agents](docs/05-how-to-use-this-repo-with-coding-agents.md) |
 
 ## Pattern Catalog
@@ -101,7 +112,12 @@ Each pattern folder contains local docs, reference code, fixtures, and tests.
 
 ## Demo
 
-The main demo is `service-incident-investigation`, a mock operations scenario:
+The reference demo is `service-incident-investigation`, a mock operations
+scenario. It is one illustrative use case — the same harness patterns apply to
+healthcare, finance, legal, customer service, DevOps, and any domain where an
+agent acts on behalf of users with tools and retrieval. See
+[Use-Case Scenarios](docs/use-case-scenarios.md) for how these patterns map
+to other domains.
 
 > Orders are not being processed after the latest release. Investigate the
 > likely cause and recommend next steps.
