@@ -2,7 +2,8 @@
 
 setup:
 	python3 -m venv .venv
-	. .venv/bin/activate && python -m pip install --upgrade pip && pip install -e ".[dev]"
+	.venv/bin/python -m pip install --upgrade pip
+	.venv/bin/python -m pip install -e ".[dev]"
 	npm --prefix apps/demo-site install
 
 quickstart: setup dev
@@ -11,25 +12,25 @@ test:
 	.venv/bin/python -m pytest -q
 
 api:
-	uvicorn apps.api.main:app --reload --port 8000
+	.venv/bin/python -m uvicorn apps.api.main:app --reload --port 8000
 
 site:
 	npm --prefix apps/demo-site run dev
 
 dev:
-	python scripts/dev.py
+	.venv/bin/python scripts/dev.py
 
 build:
 	npm --prefix apps/demo-site run build
 
 provider-smoke:
-	python scripts/smoke_provider.py
+	.venv/bin/python scripts/smoke_provider.py
 
 nvidia-direct-smoke:
-	python scripts/smoke_nvidia_direct.py
+	.venv/bin/python scripts/smoke_nvidia_direct.py
 
 langgraph-litellm-smoke:
-	python scripts/smoke_langgraph_litellm.py
+	.venv/bin/python scripts/smoke_langgraph_litellm.py
 
 rag-litellm-embeddings-smoke:
-	python scripts/smoke_rag_litellm_embeddings.py
+	.venv/bin/python scripts/smoke_rag_litellm_embeddings.py

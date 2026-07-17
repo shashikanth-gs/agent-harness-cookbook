@@ -162,7 +162,7 @@ patterns/<pattern>/
 
 ```bash
 make test
-python -m compileall packages patterns
+.venv/bin/python -m compileall packages patterns
 npm --prefix apps/demo-site run build
 ```
 
