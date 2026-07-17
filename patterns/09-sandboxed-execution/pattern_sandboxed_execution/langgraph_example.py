@@ -1,64 +1,89 @@
+"""Pattern 09 - Sandboxed Execution, idiomatic LangGraph integration.
+
+Generated code is never executed directly. When the model proposes code, a
+``policy`` node evaluates it against a static allowlist and routes allowed code
+to the ``sandbox`` node, which runs it inside the isolated ``ContainerRuntime``.
+Disallowed code is turned into a denial the model can react to. The policy gate
+and the sandbox are distinct nodes on the tool path, so both the decision and
+the isolated execution are visible in the graph.
+"""
+
 from __future__ import annotations
 
-import json
-from typing import TypedDict, Annotated, Literal
-from langchain_core.messages import AIMessage
-from langchain_core.tools import tool
+from typing import Annotated, Literal, TypedDict
+
+from langchain_core.messages import AIMessage, ToolMessage
+from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
-from langgraph.graph import StateGraph, END
-from langgraph.prebuilt import ToolNode
-from agent_harness_cookbook.providers.langchain import get_chat_model
 
 from agent_harness_cookbook.harness.sandbox import ContainerRuntime
+from agent_harness_cookbook.providers.langchain import get_chat_model
+
+runtime = ContainerRuntime()
+BLOCKED = ("import os", "import socket", "subprocess", "open(")
+
 
 class AgentState(TypedDict):
     messages: Annotated[list, add_messages]
+    allowed: bool
 
-# 1. Harness integration
-runtime = ContainerRuntime()
 
-# 2. Tools
-@tool
-def execute_python_code(code: str) -> str:
-    """Executes python code."""
-    # WRAPPER: Instead of standard exec(), we use the harness Sandbox
-    res = runtime.execute_code(code)
-    if res.exit_code != 0:
-        return f"Execution Failed (Exit {res.exit_code}): {res.stderr}"
-    return f"Success: {res.stdout}"
+llm = get_chat_model(
+    mock_responses=[
+        AIMessage(content="", tool_calls=[{"name": "run", "args": {"code": "print(2 + 2)"}, "id": "c1"}]),
+        AIMessage(content="The computation returned 4."),
+    ]
+)
 
-tools = [execute_python_code]
 
-# 3. Nodes
-def call_model(state: AgentState):
-    mock_msg = AIMessage(
-        content="",
-        tool_calls=[{"name": "execute_python_code", "args": {"code": "print('ok')"}, "id": "call_1"}],
-    )
-    llm = get_chat_model(model="gpt-4o-mini", mock_responses=[mock_msg]).bind_tools(tools)
-    response = llm.invoke(state["messages"])
-    return {"messages": [response]}
+def agent(state: AgentState) -> dict:
+    return {"messages": [llm.invoke(state["messages"])]}
 
-def should_continue(state: AgentState) -> Literal["tools", END]:
-    last_message = state["messages"][-1]
-    if getattr(last_message, "tool_calls", None):
-        return "tools"
-    return END
 
-# 4. Build Graph
+def route_agent(state: AgentState) -> Literal["policy", "__end__"]:
+    last = state["messages"][-1]
+    return "policy" if getattr(last, "tool_calls", None) else END
+
+
+def policy(state: AgentState) -> dict:
+    code = state["messages"][-1].tool_calls[0]["args"]["code"]
+    return {"allowed": not any(bad in code for bad in BLOCKED)}
+
+
+def route_policy(state: AgentState) -> Literal["sandbox", "denied"]:
+    return "sandbox" if state["allowed"] else "denied"
+
+
+def sandbox(state: AgentState) -> dict:
+    call = state["messages"][-1].tool_calls[0]
+    result = runtime.execute_code(call["args"]["code"])
+    body = result.stdout if result.exit_code == 0 else f"error: {result.stderr}"
+    return {"messages": [ToolMessage(content=body, tool_call_id=call["id"])]}
+
+
+def denied(state: AgentState) -> dict:
+    call = state["messages"][-1].tool_calls[0]
+    return {"messages": [ToolMessage(content="denied: code outside sandbox policy", tool_call_id=call["id"])]}
+
+
 builder = StateGraph(AgentState)
-builder.add_node("agent", call_model)
-builder.add_node("tools", ToolNode(tools)) # Safe ToolNode using harnessed tools
-
-builder.set_entry_point("agent")
-builder.add_conditional_edges("agent", should_continue)
-builder.add_edge("tools", "agent")
-
+builder.add_node("agent", agent)
+builder.add_node("policy", policy)
+builder.add_node("sandbox", sandbox)
+builder.add_node("denied", denied)
+builder.add_edge(START, "agent")
+builder.add_conditional_edges("agent", route_agent, {"policy": "policy", END: END})
+builder.add_conditional_edges("policy", route_policy, {"sandbox": "sandbox", "denied": "denied"})
+builder.add_edge("sandbox", "agent")
+builder.add_edge("denied", "agent")
 graph = builder.compile()
 
-def run_example():
-    print("--- Pattern 09: Enterprise LangGraph Sandboxed Execution ---\\n")
-    print("Graph compiled successfully. Tool execution runs inside isolated ContainerRuntime.")
+
+def run_example() -> None:
+    print("--- Pattern 09: Sandboxed Execution (LangGraph) ---")
+    state = graph.invoke({"messages": [("user", "Compute 2+2")], "allowed": False})
+    print("Final:", state["messages"][-1].content)
+
 
 if __name__ == "__main__":
     run_example()
