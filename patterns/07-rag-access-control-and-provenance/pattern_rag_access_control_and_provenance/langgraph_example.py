@@ -1,80 +1,79 @@
+"""Pattern 07 - RAG Access Control and Provenance, idiomatic LangGraph.
+
+Retrieval is an authorization step, not a similarity lookup. The ``retrieve``
+node filters candidate documents through the ``RetrievalAuthorizer`` before
+anything reaches the model, then routes on whether any authorized source
+survived: ``generate`` synthesizes a cited answer, ``no_answer`` returns a
+grounded refusal rather than hallucinating from unauthorized content.
+"""
+
 from __future__ import annotations
 
-import json
-from typing import TypedDict, Annotated, Literal
+from typing import Annotated, Literal, TypedDict
+
 from langchain_core.messages import AIMessage
-from langchain_core.tools import tool
+from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
-from langgraph.graph import StateGraph, END
-from langgraph.prebuilt import ToolNode
-from agent_harness_cookbook.providers.langchain import get_chat_model
 
 from agent_harness_cookbook.harness.rag_governance import (
-    ReBACPolicy, 
-    RetrievalAuthorizer, 
+    ProvenanceTracker,
+    ReBACPolicy,
+    RetrievalAuthorizer,
     RetrievedDocument,
-    ProvenanceTracker
 )
+from agent_harness_cookbook.providers.langchain import get_chat_model
 
-class AgentState(TypedDict):
-    messages: Annotated[list, add_messages]
-    tenant_id: str
-
-# 1. Harness integration
-policy = ReBACPolicy("user1", ["responder"], ["public"], "INC-001")
+policy = ReBACPolicy("user-1", ["responder"], ["public"], "INC-001")
 authorizer = RetrievalAuthorizer(policy)
 tracker = ProvenanceTracker("secret")
 
-# 2. Tools
-@tool
-def search_knowledge_base(query: str) -> str:
-    """Searches the company knowledge base."""
-    # 1. Simulate fetching from vector DB
-    raw_docs = [
-        RetrievedDocument("1", "Public logs", "public", "uri1", {}),
-        RetrievedDocument("2", "Secret keys", "private", "uri2", {})
+
+class AgentState(TypedDict):
+    messages: Annotated[list, add_messages]
+    authorized: list
+
+
+llm = get_chat_model(mock_responses=[AIMessage(content="Orders lag traced to the consumer [source: 1].")])
+
+
+def retrieve(state: AgentState) -> dict:
+    candidates = [
+        RetrievedDocument("1", "Order consumer runbook", "public", "uri1", {}),
+        RetrievedDocument("2", "Signing keys", "private", "uri2", {}),
     ]
-    
-    # 2. Harness intercepts and filters BEFORE giving to agent
-    filtered = authorizer.filter_documents(raw_docs)
-    
-    # 3. Harness signs for provenance
-    signed = [tracker.sign_document(d) for d in filtered]
-    
-    return json.dumps([f"{d.content} [Sig: {d.provenance_signature}]" for d in signed])
+    allowed = [tracker.sign_document(d) for d in authorizer.filter_documents(candidates)]
+    return {"authorized": allowed}
 
-tools = [search_knowledge_base]
 
-# 3. Nodes
-def call_model(state: AgentState):
-    mock_msg = AIMessage(
-        content="",
-        tool_calls=[{"name": "search_knowledge_base", "args": {"query": "orders incident"}, "id": "call_1"}],
-    )
-    llm = get_chat_model(model="gpt-4o-mini", mock_responses=[mock_msg]).bind_tools(tools)
-    response = llm.invoke(state["messages"])
-    return {"messages": [response]}
+def route_retrieval(state: AgentState) -> Literal["generate", "no_answer"]:
+    return "generate" if state["authorized"] else "no_answer"
 
-def should_continue(state: AgentState) -> Literal["tools", END]:
-    last_message = state["messages"][-1]
-    if getattr(last_message, "tool_calls", None):
-        return "tools"
-    return END
 
-# 4. Build Graph
+def generate(state: AgentState) -> dict:
+    return {"messages": [llm.invoke(state["messages"])]}
+
+
+def no_answer(state: AgentState) -> dict:
+    return {"messages": [AIMessage(content="No authorized source found for this query.")]}
+
+
 builder = StateGraph(AgentState)
-builder.add_node("agent", call_model)
-builder.add_node("tools", ToolNode(tools)) # Uses LangGraph's prebuilt ToolNode
-
-builder.set_entry_point("agent")
-builder.add_conditional_edges("agent", should_continue)
-builder.add_edge("tools", "agent")
-
+builder.add_node("retrieve", retrieve)
+builder.add_node("generate", generate)
+builder.add_node("no_answer", no_answer)
+builder.add_edge(START, "retrieve")
+builder.add_conditional_edges("retrieve", route_retrieval, {"generate": "generate", "no_answer": "no_answer"})
+builder.add_edge("generate", END)
+builder.add_edge("no_answer", END)
 graph = builder.compile()
 
-def run_example():
-    print("--- Pattern 07: Enterprise LangGraph RAG Access Control ---\\n")
-    print("Graph compiled successfully. Tool execution is safely intercepted by harness authorizer.")
+
+def run_example() -> None:
+    print("--- Pattern 07: RAG Access Control and Provenance (LangGraph) ---")
+    state = graph.invoke({"messages": [("user", "Why are orders lagging?")], "authorized": []})
+    print("Authorized docs:", [d.doc_id for d in state["authorized"]])
+    print("Answer:", state["messages"][-1].content)
+
 
 if __name__ == "__main__":
     run_example()

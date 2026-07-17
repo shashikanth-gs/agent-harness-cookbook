@@ -1,59 +1,104 @@
+"""Pattern 06 - Prompt Injection and Goal Hijacking, idiomatic LangGraph.
+
+Containment happens at two independent points. ``input_guard`` classifies the
+inbound message with the ``SemanticAuditor`` and routes malicious input away
+from the model entirely. ``tool_guard`` binds any proposed tool call to the
+original task with ``TaskShield``, so even a call the model was tricked into
+proposing is denied when it is not purpose-aligned. Either guard can route to a
+terminal ``refuse`` node.
+"""
+
 from __future__ import annotations
 
-from typing import TypedDict, Annotated, Literal
+from typing import Annotated, Literal, TypedDict
+
+from langchain_core.messages import AIMessage, ToolMessage
+from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
-from langgraph.graph import StateGraph, END
-from langchain_core.messages import HumanMessage, AIMessage
+from langgraph.prebuilt import ToolNode
+from langchain_core.tools import tool
+
+from agent_harness_cookbook.harness.injection_defense import SemanticAuditor, TaskShield
 from agent_harness_cookbook.providers.langchain import get_chat_model
 
-from agent_harness_cookbook.harness.injection_defense import SemanticAuditor
+ORIGINAL_GOAL = "Find the API that returns order details."
+auditor = SemanticAuditor()
+shield = TaskShield(ORIGINAL_GOAL)
+
 
 class AgentState(TypedDict):
     messages: Annotated[list, add_messages]
+    refusal: str
 
-# 1. Harness integration
-auditor = SemanticAuditor()
 
-# 2. Nodes
-def audit_gate_node(state: AgentState) -> dict:
-    """
-    Strict entry point. Analyzes the latest HumanMessage for prompt injection.
-    """
-    last_message = state["messages"][-1]
-    if isinstance(last_message, HumanMessage):
-        decision = auditor.check_input(last_message.content)
-        if not decision.is_safe:
-            # Short-circuit by returning an error message
-            return {"messages": [AIMessage(content=f"Security Exception: {decision.reason}")]}
-    return {}
+@tool
+def search_docs() -> str:
+    """Search the API documentation."""
+    return "GET /orders/{id} returns order details."
 
-def should_execute_agent(state: AgentState) -> Literal["agent", END]:
-    """If the audit gate threw a security exception, stop the graph."""
-    last_message = state["messages"][-1]
-    if isinstance(last_message, AIMessage) and "Security Exception" in last_message.content:
-        return END
-    return "agent"
 
-def call_model(state: AgentState):
-    mock_msg = AIMessage(content="Input passed the injection audit.")
-    llm = get_chat_model(model="gpt-4o-mini", mock_responses=[mock_msg])
-    response = llm.invoke(state["messages"])
-    return {"messages": [response]}
+tools = [search_docs]
 
-# 3. Build Graph
+llm = get_chat_model(
+    mock_responses=[
+        AIMessage(content="", tool_calls=[{"name": "search_docs", "args": {}, "id": "c1"}]),
+        AIMessage(content="Use GET /orders/{id}."),
+    ]
+).bind_tools(tools)
+
+
+def input_guard(state: AgentState) -> dict:
+    decision = auditor.check_input(state["messages"][-1].content)
+    return {"refusal": "" if decision.is_safe else decision.reason}
+
+
+def route_input(state: AgentState) -> Literal["agent", "refuse"]:
+    return "agent" if not state["refusal"] else "refuse"
+
+
+def agent(state: AgentState) -> dict:
+    return {"messages": [llm.invoke(state["messages"])]}
+
+
+def route_agent(state: AgentState) -> Literal["tool_guard", "__end__"]:
+    last = state["messages"][-1]
+    return "tool_guard" if getattr(last, "tool_calls", None) else END
+
+
+def tool_guard(state: AgentState) -> dict:
+    call = state["messages"][-1].tool_calls[0]
+    decision = shield.verify_tool_alignment(call["name"], call["args"], "model requested")
+    return {"refusal": "" if decision.is_safe else decision.reason}
+
+
+def route_tool(state: AgentState) -> Literal["tools", "refuse"]:
+    return "tools" if not state["refusal"] else "refuse"
+
+
+def refuse(state: AgentState) -> dict:
+    return {"messages": [AIMessage(content=f"Refused: {state['refusal']}")]}
+
+
 builder = StateGraph(AgentState)
-builder.add_node("auditor", audit_gate_node)
-builder.add_node("agent", call_model)
-
-builder.set_entry_point("auditor")
-builder.add_conditional_edges("auditor", should_execute_agent)
-builder.add_edge("agent", END)
-
+builder.add_node("input_guard", input_guard)
+builder.add_node("agent", agent)
+builder.add_node("tool_guard", tool_guard)
+builder.add_node("tools", ToolNode(tools))
+builder.add_node("refuse", refuse)
+builder.add_edge(START, "input_guard")
+builder.add_conditional_edges("input_guard", route_input, {"agent": "agent", "refuse": "refuse"})
+builder.add_conditional_edges("agent", route_agent, {"tool_guard": "tool_guard", END: END})
+builder.add_conditional_edges("tool_guard", route_tool, {"tools": "tools", "refuse": "refuse"})
+builder.add_edge("tools", "agent")
+builder.add_edge("refuse", END)
 graph = builder.compile()
 
-def run_example():
-    print("--- Pattern 06: Enterprise LangGraph Prompt Injection ---\\n")
-    print("Graph compiled successfully. Auditor conditionally routes around LLM if malicious.")
+
+def run_example() -> None:
+    print("--- Pattern 06: Prompt Injection and Goal Hijacking (LangGraph) ---")
+    state = graph.invoke({"messages": [("user", ORIGINAL_GOAL)], "refusal": ""})
+    print("Final:", state["messages"][-1].content)
+
 
 if __name__ == "__main__":
     run_example()

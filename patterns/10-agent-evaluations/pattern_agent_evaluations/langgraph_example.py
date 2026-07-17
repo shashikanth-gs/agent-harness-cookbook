@@ -1,54 +1,64 @@
+"""Pattern 10 - Agent Evaluations, idiomatic LangGraph integration.
+
+Evaluation runs over the trajectory the agent produced, so in an eval harness it
+is a terminal node that consumes the completed message history rather than a
+control inside the agent's own loop. The ``agent`` node does the work; the
+``evaluate`` node converts the resulting messages into a trajectory and scores
+tool efficiency, plan adherence, and safety with the ``TrajectoryScorer``.
+"""
+
 from __future__ import annotations
 
-import json
-from typing import TypedDict, Annotated, Literal
-from langchain_core.messages import BaseMessage, AIMessage, ToolMessage
+from typing import Annotated, TypedDict
+
+from langchain_core.messages import AIMessage, ToolMessage
+from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
-from langgraph.graph import StateGraph, END
 
 from agent_harness_cookbook.harness.evaluations import TrajectoryScorer
+from agent_harness_cookbook.providers.langchain import get_chat_model
 
-class AgentState(TypedDict):
-    messages: Annotated[list[BaseMessage], add_messages]
-
-# 1. Harness integration
 scorer = TrajectoryScorer()
 
-# 2. Nodes
-def call_model(state: AgentState):
-    # Dummy mock for testing without API keys
-    return {"messages": [AIMessage(content="I think I will use the ls tool.")]}
 
-def evaluation_post_processor(final_state: AgentState):
-    """
-    Runs completely outside the LangGraph execution.
-    It takes the completed LangGraph state history (messages) and evaluates it.
-    """
-    # Transform LangChain BaseMessages into harness-compatible trajectory JSON
+class AgentState(TypedDict):
+    messages: Annotated[list, add_messages]
+    score: float
+    passed: bool
+
+
+llm = get_chat_model(mock_responses=[AIMessage(content="Used log_search once and answered.")])
+
+
+def agent(state: AgentState) -> dict:
+    return {"messages": [llm.invoke(state["messages"])]}
+
+
+def evaluate(state: AgentState) -> dict:
     trajectory = []
-    for m in final_state["messages"]:
+    for m in state["messages"]:
         if isinstance(m, AIMessage):
             trajectory.append({"type": "thought", "content": m.content})
         elif isinstance(m, ToolMessage):
             trajectory.append({"type": "tool_call", "name": m.name, "args": m.content})
-            
     result = scorer.evaluate_tool_efficiency(trajectory, expected_optimal_steps=1)
-    print(f"Enterprise Post-Run Eval Score: {result.score}")
+    return {"score": result.score, "passed": result.passed}
 
-# 3. Build Graph
+
 builder = StateGraph(AgentState)
-builder.add_node("agent", call_model)
-builder.set_entry_point("agent")
-builder.add_edge("agent", END)
-
+builder.add_node("agent", agent)
+builder.add_node("evaluate", evaluate)
+builder.add_edge(START, "agent")
+builder.add_edge("agent", "evaluate")
+builder.add_edge("evaluate", END)
 graph = builder.compile()
 
-def run_example():
-    print("--- Pattern 10: Enterprise LangGraph Agent Evaluations ---\\n")
-    state = graph.invoke({"messages": []})
-    
-    # Run evaluation harness on the result
-    evaluation_post_processor(state)
+
+def run_example() -> None:
+    print("--- Pattern 10: Agent Evaluations (LangGraph) ---")
+    state = graph.invoke({"messages": [("user", "Diagnose the incident")], "score": 0.0, "passed": False})
+    print("Score:", state["score"], "Passed:", state["passed"])
+
 
 if __name__ == "__main__":
     run_example()

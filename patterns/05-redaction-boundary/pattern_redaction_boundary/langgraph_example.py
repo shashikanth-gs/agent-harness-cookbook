@@ -1,45 +1,69 @@
+"""Pattern 05 - Redaction Boundary, idiomatic LangGraph integration.
+
+Redaction is applied at more than one boundary. ``redact_input`` scrubs the
+inbound user message before the model sees it, and ``redact_output`` scrubs the
+model's answer before it leaves the graph. The two redaction nodes bracket the
+agent so there is no path into or out of the model that skips the boundary.
+"""
+
 from __future__ import annotations
 
-from typing import TypedDict, Annotated
+from typing import Annotated, TypedDict
+
+from langchain_core.messages import AIMessage, HumanMessage
+from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
-from langgraph.graph import StateGraph, END
-from langchain_core.messages import HumanMessage, AIMessage
 
 from agent_harness_cookbook.harness.redaction import redact
+from agent_harness_cookbook.providers.langchain import get_chat_model
+
 
 class AgentState(TypedDict):
     messages: Annotated[list, add_messages]
 
-# 2. Nodes
-def redaction_boundary_node(state: AgentState):
-    last_message = state["messages"][-1]
-    if isinstance(last_message, HumanMessage):
-        clean_text = redact(last_message.content)
-        # Using add_messages: returning a message with the same ID overwrites it
-        msg_dict = last_message.dict()
-        msg_dict["content"] = clean_text
-        return {"messages": [HumanMessage(**msg_dict)]}
+
+llm = get_chat_model(
+    mock_responses=[AIMessage(content="Ticket references card 4111 1111 1111 1111; escalating.")]
+)
+
+
+def redact_input(state: AgentState) -> dict:
+    last = state["messages"][-1]
+    if isinstance(last, HumanMessage):
+        clean = last.model_copy(update={"content": redact(last.content)})
+        return {"messages": [clean]}
     return {}
 
-def call_model(state: AgentState):
-    # Mock
-    return {"messages": [AIMessage(content="I see the redacted email.")]}
 
-# 3. Build Graph
+def agent(state: AgentState) -> dict:
+    return {"messages": [llm.invoke(state["messages"])]}
+
+
+def redact_output(state: AgentState) -> dict:
+    last = state["messages"][-1]
+    clean = last.model_copy(update={"content": redact(last.content)})
+    return {"messages": [clean]}
+
+
 builder = StateGraph(AgentState)
-builder.add_node("redactor", redaction_boundary_node)
-builder.add_node("agent", call_model)
-
-builder.set_entry_point("redactor")
-builder.add_edge("redactor", "agent")
-builder.add_edge("agent", END)
-
+builder.add_node("redact_input", redact_input)
+builder.add_node("agent", agent)
+builder.add_node("redact_output", redact_output)
+builder.add_edge(START, "redact_input")
+builder.add_edge("redact_input", "agent")
+builder.add_edge("agent", "redact_output")
+builder.add_edge("redact_output", END)
 graph = builder.compile()
 
-def run_example():
-    print("--- Pattern 05: Enterprise LangGraph Redaction Boundary ---\\n")
-    state = graph.invoke({"messages": [HumanMessage(content="My email is a@a.com")]})
-    print(state["messages"][-2].content)
+
+def run_example() -> None:
+    print("--- Pattern 05: Redaction Boundary (LangGraph) ---")
+    state = graph.invoke(
+        {"messages": [HumanMessage(content="Investigate failure for alex@example.com")]}
+    )
+    print("Redacted input:", state["messages"][0].content)
+    print("Redacted output:", state["messages"][-1].content)
+
 
 if __name__ == "__main__":
     run_example()
