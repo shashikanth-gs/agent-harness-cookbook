@@ -1,37 +1,57 @@
 # Agent Harness Cookbook
 
-Agent Harness Cookbook is a practical reference for designing enterprise-grade
-AI agent harnesses.
+[![CI](https://github.com/shashikanth-gs/agent-harness-cookbook/actions/workflows/ci.yml/badge.svg)](https://github.com/shashikanth-gs/agent-harness-cookbook/actions/workflows/ci.yml)
 
-It is not a framework. It is not a production platform. It is not a strict
-guardrails product. It is a cookbook of patterns, threat cases, reference
-implementations, eval cases, and implementation specs.
+Agent Harness Cookbook is a practical reference for designing the control layer
+around enterprise AI agents.
 
-The goal is not to block every agent action. The goal is to make agent
-capabilities explicit, bounded, observable, governable, testable, and auditable.
+It is not an agent framework or hosted platform. It is a collection of patterns,
+threat cases, reference implementations, eval cases, and implementation specs
+for making agent capabilities explicit, bounded, observable, governable,
+testable, and auditable.
 
-The repo helps engineers answer:
+Use this repo when you already know how to build an agent and need to answer:
 
-> I know how to build an agent. What must I consider around the agent to make it
-> safer, governable, observable, auditable, reliable, and enterprise-ready?
+> What must sit around the agent so its tools, memory, retrieval, approvals,
+> traces, budgets, and evaluations are safe enough for enterprise use?
 
 ## Start Here
 
-1. Read [what is an agent harness](docs/00-what-is-an-agent-harness.md).
-2. Read [authority vs context](docs/05-authority-vs-context.md).
-3. Read the [enterprise threat model](docs/03-enterprise-agent-threat-model.md).
-4. Run the service incident investigation demo.
-5. Review [Prompt Injection and Goal Hijack](patterns/06-prompt-injection-and-goal-hijack/README.md).
-6. Review [Tool Privilege Broker](patterns/01-tool-privilege-broker/README.md).
-7. Review [Decision Trace and Audit](patterns/03-decision-trace-and-audit/README.md).
+1. Read [What Is an Agent Harness?](docs/00-what-is-an-agent-harness.md).
+2. Read [Authority vs Context](docs/05-authority-vs-context.md).
+3. Read the [Enterprise Agent Threat Model](docs/03-enterprise-agent-threat-model.md).
+4. Run the local tests with `make test`.
+5. Open the first pattern: [Tool Privilege Broker](patterns/01-tool-privilege-broker/README.md).
+6. Then review [Prompt Injection and Goal Hijack](patterns/06-prompt-injection-and-goal-hijack/README.md).
+7. Use the [End-to-End Harness Implementation Spec](docs/end-to-end-harness-implementation-spec.md) to see how the patterns connect.
+
+## Quick Start
+
+```bash
+make setup
+make test
+```
+
+Run the local demo app:
+
+```bash
+make dev
+```
+
+Open:
+
+- Website: `http://localhost:5173`
+- API: `http://localhost:8000`
+
+Mock mode is the default. No cloud account, real database, external service, or
+LLM API key is required.
 
 ## Core Idea
 
-An agent harness is the layer around an agent that controls how instructions,
-tools, memory, retrieved content, approvals, traces, budgets, and evaluations
-work together.
+An agent harness is the layer around an agent that decides what the agent may
+read, remember, retrieve, call, approve, execute, log, and return.
 
-The harness repeatedly separates these concepts:
+The harness treats different inputs differently:
 
 ```text
 Trusted policy / system instruction = authority
@@ -42,120 +62,68 @@ Memory = context, not authority unless validated
 Other agent = peer/delegate, not authority unless explicitly delegated
 ```
 
-This distinction is not enough by itself. The harness must also enforce policy
-deterministically at control points such as retrieval, context building,
-tool-call authorization, approval, memory writes, output validation, audit, and
-evaluation.
+The distinction only matters if the harness enforces it at concrete control
+points: retrieval, context building, tool authorization, approval, memory
+writes, redaction, sandboxing, audit, and evaluation.
 
-## What This Includes
+## Documentation Map
 
-- Pattern articles and implementation specs.
-- Threat cases for the highest-risk patterns.
-- Self-contained reference packages for implemented patterns.
-- Pattern-local tests beside each reference implementation.
-- Mock data only. No external services, cloud accounts, real databases, or real
-  LLM keys are required.
-- Local demo API and lightweight website.
-- Prompts that help coding agents implement and review harness patterns.
+| Topic | Start here |
+| --- | --- |
+| Architecture | [Reference Architecture](docs/reference-architecture.md) |
+| Capabilities | [Capability Map](docs/01-capability-map.md) |
+| Framework positioning | [Harness vs Framework vs Platform](docs/02-harness-vs-framework-vs-platform.md) |
+| Threat modeling | [Enterprise Agent Threat Model](docs/03-enterprise-agent-threat-model.md) |
+| Authority boundaries | [Authority vs Context](docs/05-authority-vs-context.md) |
+| Adoption maturity | [Adoption Levels](docs/06-adoption-levels.md) |
+| Trajectory evaluation | [Trajectory Safety](docs/07-trajectory-safety.md) and [Evaluation Philosophy](docs/evaluation-philosophy.md) |
+| Provider adapters | [Provider Gateway and LiteLLM](docs/08-provider-gateway-and-litellm.md) |
+| Coding-agent usage | [How to Use This Repo With Coding Agents](docs/05-how-to-use-this-repo-with-coding-agents.md) |
 
-## Pattern Priority
+## Pattern Catalog
 
-The repo has twelve patterns, but not all of them should be deepened equally at
-the same time. The first five are the core control surface:
+Each pattern folder contains local docs, reference code, fixtures, and tests.
 
-1. Prompt Injection and Goal Hijack
-2. Tool Privilege Broker
-3. RAG Access Control and Provenance
-4. HITL Approval Gate
-5. Decision Trace and Audit
-
-Supporting patterns connect to those controls:
-
-- Redaction Boundary
-- Cost and Tool Budgeting
-- Agent Evaluations
-- CI/CD Evaluation Gates
-- Memory Isolation
-- Sandboxed Execution
-- Agent Lifecycle Profile
-
-## v1 Patterns
-
-All twelve patterns are grouped under `patterns/`:
-
-- `01-tool-privilege-broker`
-- `02-hitl-approval-gate`
-- `03-decision-trace-and-audit`
-- `04-cost-and-tool-budgeting`
-- `05-redaction-boundary`
-- `06-prompt-injection-and-goal-hijack`
-- `07-rag-access-control-and-provenance`
-- `08-memory-isolation`
-- `09-sandboxed-execution`
-- `10-agent-evaluations`
-- `11-ci-cd-evaluation-gates`
-- `12-agent-lifecycle-profile`
-
-Each pattern is intended to answer:
-
-1. What can go wrong?
-2. Where can unsafe input or action enter?
-3. How does it propagate?
-4. Which harness control point catches it?
-5. What is allowed?
-6. What is denied?
-7. What requires approval?
-8. What should be logged?
-9. How is it evaluated?
-10. What residual risks remain?
+| Pattern | Use it when the agent needs to... | Docs |
+| --- | --- | --- |
+| 01 Tool Privilege Broker | decide whether a tool call is allowed | [README](patterns/01-tool-privilege-broker/README.md), [threat model](patterns/01-tool-privilege-broker/threat-model.md), [control matrix](patterns/01-tool-privilege-broker/control-matrix.md) |
+| 02 HITL Approval Gate | pause risky actions for exact-action approval | [README](patterns/02-hitl-approval-gate/README.md), [implementation spec](patterns/02-hitl-approval-gate/implementation-spec.md), [eval cases](patterns/02-hitl-approval-gate/eval-cases.md) |
+| 03 Decision Trace and Audit | explain and evaluate what happened during a run | [README](patterns/03-decision-trace-and-audit/README.md), [threat model](patterns/03-decision-trace-and-audit/threat-model.md), [failure modes](patterns/03-decision-trace-and-audit/failure-modes.md) |
+| 04 Cost and Tool Budgeting | prevent runaway loops and resource exhaustion | [README](patterns/04-cost-and-tool-budgeting/README.md), [threat model](patterns/04-cost-and-tool-budgeting/threat-model.md), [control matrix](patterns/04-cost-and-tool-budgeting/control-matrix.md) |
+| 05 Redaction Boundary | prevent sensitive data from crossing model/tool boundaries | [README](patterns/05-redaction-boundary/README.md), [failure modes](patterns/05-redaction-boundary/failure-modes.md), [control matrix](patterns/05-redaction-boundary/control-matrix.md) |
+| 06 Prompt Injection and Goal Hijack | keep untrusted content from becoming authority | [README](patterns/06-prompt-injection-and-goal-hijack/README.md), [threat model](patterns/06-prompt-injection-and-goal-hijack/threat-model.md), [eval cases](patterns/06-prompt-injection-and-goal-hijack/eval-cases.md) |
+| 07 RAG Access Control and Provenance | authorize retrieved content and preserve citations | [README](patterns/07-rag-access-control-and-provenance/README.md), [implementation spec](patterns/07-rag-access-control-and-provenance/implementation-spec.md), [control matrix](patterns/07-rag-access-control-and-provenance/control-matrix.md) |
+| 08 Memory Isolation | keep memory scoped to the right tenant, user, task, and agent | [README](patterns/08-memory-isolation/README.md), [threat model](patterns/08-memory-isolation/threat-model.md), [failure modes](patterns/08-memory-isolation/failure-modes.md) |
+| 09 Sandboxed Execution | run generated code without trusting the host | [README](patterns/09-sandboxed-execution/README.md), [threat model](patterns/09-sandboxed-execution/threat-model.md), [control matrix](patterns/09-sandboxed-execution/control-matrix.md) |
+| 10 Agent Evaluations | test trajectories, not only final answers | [README](patterns/10-agent-evaluations/README.md), [eval cases](patterns/10-agent-evaluations/eval-cases.md), [failure modes](patterns/10-agent-evaluations/failure-modes.md) |
+| 11 CI/CD Evaluation Gates | block regressions before deployment | [README](patterns/11-ci-cd-evaluation-gates/README.md), [implementation spec](patterns/11-ci-cd-evaluation-gates/implementation-spec.md), [threat model](patterns/11-ci-cd-evaluation-gates/threat-model.md) |
+| 12 Agent Lifecycle Profile | bind runtime behavior to agent identity and lifecycle | [README](patterns/12-agent-lifecycle-profile/README.md), [threat model](patterns/12-agent-lifecycle-profile/threat-model.md), [control matrix](patterns/12-agent-lifecycle-profile/control-matrix.md) |
 
 ## Demo
 
-The current demo is `service-incident-investigation`, a generic operations
-scenario:
+The main demo is `service-incident-investigation`, a mock operations scenario:
 
 > Orders are not being processed after the latest release. Investigate the
 > likely cause and recommend next steps.
 
-The demo uses only mock tools: logs, metrics, release events, runbooks, audit,
-redaction, budget tracking, and human approval for risky remediation.
-
-The next depth target is to make this demo cover three scenarios:
+The demo covers:
 
 - normal root-cause investigation,
-- indirect injection hidden in logs,
-- risky remediation requiring exact-action approval.
+- indirect injection hidden in logs and retrieved content,
+- risky remediation requiring exact-action approval,
+- budget tracking, redaction, audit, and trajectory evaluation.
 
-## Local Setup
+Relevant entry points:
 
-One command:
+- [Raw Python workflow](packages/agent_harness_cookbook/demos/service_incident_investigation.py)
+- [LangGraph workflow](packages/agent_harness_cookbook/demos/service_incident_langgraph.py)
+- [End-to-end harness](packages/agent_harness_cookbook/demos/end_to_end_harness.py)
+- [End-to-end tests](tests/test_end_to_end_harness.py)
 
-```bash
-make quickstart
-```
+## Optional Real Provider Testing
 
-Or step by step:
-
-```bash
-make setup
-make dev
-```
-
-Open:
-
-- Website: `http://localhost:5173`
-- API: `http://localhost:8000`
-
-Run tests:
-
-```bash
-make test
-```
-
-## Optional Real Provider Testing With Embedded LiteLLM
-
-Mock mode is the default and needs no API keys. To test with real model
-providers, use the embedded LiteLLM Python SDK:
+The default provider is a deterministic mock. To test with a real model through
+LiteLLM:
 
 ```bash
 cp .env.example .env
@@ -166,8 +134,8 @@ cp .env.example .env
 make dev
 ```
 
-Provider adapters are optional. The cookbook must remain runnable locally with
-mock tools, local JSON fixtures, local policies, local traces, and local evals.
+Provider adapters are optional. The cookbook should remain runnable with local
+mocks, local policies, local traces, and local evals.
 
 ## Repository Shape
 
@@ -190,5 +158,21 @@ patterns/<pattern>/
   tests/
 ```
 
-Not every pattern has reached this target structure yet. The priority is to
-bring the top five patterns to this shape first.
+## Development
+
+```bash
+make test
+python -m compileall packages patterns
+npm --prefix apps/demo-site run build
+```
+
+CI runs these checks on push and pull request.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). For coding-agent workflows, see
+[How to Use This Repo With Coding Agents](docs/05-how-to-use-this-repo-with-coding-agents.md).
+
+## License
+
+[MIT](LICENSE)
