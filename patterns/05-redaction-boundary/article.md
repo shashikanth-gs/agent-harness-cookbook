@@ -22,3 +22,8 @@ Before the agent returns a final answer to the user—or executes a tool—the o
 
 ### Reversible Tokenization (Anonymization)
 In many cases, the agent needs to reason about the sensitive data without seeing the actual values. For example, the boundary can replace "John Doe" with `PERSON_1`. If the agent's final output references `PERSON_1`, the boundary intercepts the response and re-injects the true value ("John Doe") before showing it to the human user, ensuring the LLM never saw the real PII.
+
+## References
+
+- OWASP Top 10 for LLMs (2025) — Sensitive Information Disclosure (LLM02). https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/
+- Simon Willison — the lethal trifecta: access to private data + untrusted content + ability to act = vulnerability. https://simonw.substack.com/p/the-lethal-trifecta-for-ai-agents

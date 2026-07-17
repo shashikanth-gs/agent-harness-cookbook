@@ -64,3 +64,8 @@ Trace evals should answer:
 - did denied actions stay denied,
 - did budget exhaustion return partial,
 - can a reviewer reconstruct the run without hidden reasoning.
+
+## References
+
+- HarnessAudit — full execution trajectory auditing; final output correctness does not prove boundary compliance. https://arxiv.org/abs/2605.14271
+- SciTrace — trajectory-aware safety reasoning for scientific discovery agents. https://arxiv.org/abs/2606.08234

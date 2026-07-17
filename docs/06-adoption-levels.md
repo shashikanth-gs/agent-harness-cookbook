@@ -29,3 +29,11 @@ events, and trajectory checks can inspect what happened during a run.
 ## Level 5: Mature Operational Controls
 The harness combines policy, approval, audit, evals, anomaly detection, CI/CD
 gates, lifecycle review, and operational monitoring.
+
+## Beyond the Harness
+
+Even at Level 5 maturity, the harness is one layer in the enterprise stack.
+Production deployments require additional infrastructure: API gateways, identity
+federation, secret management, network security, and compliance integration. See
+[What This Cookbook Does Not Cover](what-this-cookbook-does-not-cover.md) for what
+sits beyond the harness at every adoption level.

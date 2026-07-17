@@ -28,3 +28,9 @@ Evaluations should assert against multiple layers of the trace:
 
 ### The "Judge" Model
 Often, evaluating subjective behavior (like "was this response polite?") requires another LLM to act as a judge. The Judge Model is provided with the agent's trace and a grading rubric, and it outputs a structured evaluation (e.g., `PASS` or `FAIL` with a reasoning string).
+
+## References
+
+- HarnessAudit — trajectory auditing; final output correctness does not prove safety. https://arxiv.org/abs/2605.14271
+- AgentDojo — adversarial evaluation framework with utility/safety tradeoff checks. https://agentdojo.spylab.ai/
+- The 2025 AI Agent Index — documents safety features of deployed agentic AI systems. https://arxiv.org/abs/2602.17753

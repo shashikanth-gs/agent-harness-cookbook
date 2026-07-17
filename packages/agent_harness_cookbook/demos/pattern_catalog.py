@@ -1,3 +1,9 @@
+"""Pattern catalog demo exercising all 12 harness patterns.
+
+These patterns are a starting set. See docs/what-this-cookbook-does-not-cover.md
+for enterprise concerns beyond the harness layer.
+"""
+
 from __future__ import annotations
 
 from agent_harness_cookbook.harness.audit import AuditStore

@@ -24,3 +24,8 @@ Not all data belongs in long-term memory. Agents should utilize Ephemeral Memory
 
 ### Memory Poisoning Defense
 Memory acts as a delayed prompt injection vector (Sleeper Agent attack). Before a past memory is injected into the current LLM prompt context, it must be validated by the harness's input guard to ensure it hasn't been tampered with or poisoned.
+
+## References
+
+- Constraint drift in self-evolving LLM agents — memory persistence enables gradual boundary erosion. https://arxiv.org/abs/2509.26354
+- Security Considerations for Multi-agent Systems — shared state and memory as attack surfaces. https://arxiv.org/abs/2603.09002

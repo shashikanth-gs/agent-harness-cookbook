@@ -25,3 +25,8 @@ A malicious prompt could instruct the agent to write a "fork bomb" or an infinit
 
 ## Fail-Closed Behavior
 If the sandbox fails to initialize, or if the Docker daemon is unreachable, the harness must fail closed. Under no circumstances should the harness fall back to executing the code natively on the host machine.
+
+## References
+
+- Anthropic Computer Use safety guidance — recommends VMs/containers with minimal privileges for agent code execution. https://docs.anthropic.com/en/docs/build-with-claude/computer-use
+- BraveGuard — open-world threat defense for computer-use agents. https://arxiv.org/abs/2606.01166

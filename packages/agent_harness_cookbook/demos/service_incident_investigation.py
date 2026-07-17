@@ -1,3 +1,11 @@
+"""Service incident investigation demo.
+
+This scenario is one illustrative use case. The same harness patterns apply to
+healthcare, finance, legal, customer service, DevOps, and any domain where an
+agent acts on behalf of users with tools and retrieval. See
+docs/use-case-scenarios.md for cross-domain examples.
+"""
+
 from __future__ import annotations
 
 from dataclasses import asdict

@@ -1,3 +1,9 @@
+"""RAG governance demo showing access control and provenance.
+
+This scenario is one illustrative use case. See docs/use-case-scenarios.md
+for how RAG access control applies across domains.
+"""
+
 from __future__ import annotations
 
 from typing import Any

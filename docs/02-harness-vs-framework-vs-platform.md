@@ -21,3 +21,11 @@ An agent harness is the deterministic **security and design layer** that sits *a
 The harness does not care *how* the framework loops or *which* platform is serving the model. Its only job is to intercept the data flowing into the framework (Input Guards, Memory Isolation) and the decisions flowing out of the framework (Tool Privilege Brokers, Sandboxing) to enforce deterministic enterprise policy.
 
 By decoupling the Harness from the Framework, you ensure that even if you migrate from Semantic Kernel to LangGraph next year, your security boundaries, audit trails, and approval gates remain intact.
+
+## What Else Is Needed
+
+The harness is one layer. Production agent systems also need API gateways,
+identity federation (OAuth 2.0, OIDC), principal propagation through tool calls,
+secret management, network security, and compliance framework integration. See
+[What This Cookbook Does Not Cover](what-this-cookbook-does-not-cover.md) for the
+full list.

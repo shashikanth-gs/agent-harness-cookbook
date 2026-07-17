@@ -368,3 +368,9 @@ Those residual risks need sandboxing, approval quality controls, static
 scanning, redaction, audit, evals, and operational review. The broker's narrower
 job is to ensure that no model proposal becomes a real action without passing
 deterministic policy for the exact actor chain and action.
+
+## References
+
+- OWASP Top 10 for Agentic Applications (2025) — Tool Misuse and Exploitation (ASI02). https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/
+- ClawGuard — tool-call boundary enforcement via task-specific allowed actions. https://arxiv.org/abs/2604.11790
+- Authorization Propagation in Multi-Agent AI Systems — formalizes authorization as a workflow-level property. https://arxiv.org/abs/2605.05440

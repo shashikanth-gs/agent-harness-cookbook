@@ -90,3 +90,11 @@ For audit and evaluation, classify every event:
 
 This distinction matters because final answer correctness is insufficient. A
 run can end with a safe answer after attempting an unsafe intermediate action.
+
+## Identity as the Foundation of Authority
+
+Authority classification depends on knowing who is asking. The harness checks
+identity fields (user, role, tenant) at each control point, but identity must be
+established and propagated by infrastructure outside the harness. See
+[Identity and Principal Propagation](identity-and-principal-propagation.md) for
+the end-to-end flow.

@@ -26,3 +26,8 @@ An agent can enter a "tool failure loop" where it repeatedly calls a tool with i
 ## Fail-Closed Behavior
 
 When a budget limit is reached, the agent must not be allowed to make "just one more call" to summarize the failure. The budget interceptor must return an immediate `BudgetExceededException` directly to the execution runtime, triggering a partial state return or a predefined failure route.
+
+## References
+
+- OWASP Top 10 for LLMs (2025) — Unbounded Consumption (LLM10). https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/
+- Constraint drift in self-evolving LLM agents — long-running agents gradually shift from safety boundaries. https://arxiv.org/abs/2509.26354

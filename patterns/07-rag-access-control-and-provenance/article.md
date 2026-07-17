@@ -62,3 +62,9 @@ Run:
 The target depth for this pattern is chunk-level ACL, source hash, source
 version, stale cache invalidation, query rewrite checks, poisoned authorized
 document handling, and sensitive field masking.
+
+## References
+
+- SkillInject — skill-file and instruction-file poisoning as a supply-chain attack surface. https://arxiv.org/abs/2602.20156
+- AgentDojo — adversarial tool-use evaluation over untrusted retrieved data. https://agentdojo.spylab.ai/
+- Authorization Propagation in Multi-Agent AI Systems — authorization must extend to retrieved content. https://arxiv.org/abs/2605.05440

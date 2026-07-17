@@ -30,3 +30,11 @@ Agents are non-deterministic, unbounded loops that can exhaust resources or fail
 Safety boundaries must be continuously tested against model drift and regressions.
 - **Trajectory Assertions:** Testing that the harness intercepts and logs a blocked action, rather than just checking if the final answer is safe.
 - **CI/CD Evaluation Gates:** Automatically running adversarial prompt fuzzing on every Pull Request before merging harness changes.
+
+## Beyond the Harness
+
+These capabilities define the harness layer. Production deployments also require
+infrastructure beyond the harness: API gateways, identity federation, secret
+management, network security, and compliance integration. See
+[What This Cookbook Does Not Cover](what-this-cookbook-does-not-cover.md) and
+[Identity and Principal Propagation](identity-and-principal-propagation.md).
