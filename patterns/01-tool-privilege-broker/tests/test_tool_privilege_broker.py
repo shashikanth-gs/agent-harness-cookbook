@@ -172,11 +172,40 @@ def test_approved_exact_action_is_allowed_after_revalidation() -> None:
             **request.__dict__,
             "approval_status": "approved",
             "approval_action_hash": action_hash(request),
+            "approval_approver_roles": ["ops-lead"],
         }
     )
     decision = broker.evaluate(approved)
     assert decision.decision == "allow"
     assert decision.reason == "approved action hash matched and policy revalidated"
+
+
+def test_approved_action_without_required_approver_role_is_denied() -> None:
+    broker = ToolPrivilegeBroker(load_policy())
+    request = ToolRequest(
+        agent_id="ops-investigator",
+        user_id="user-123",
+        user_roles=["ops-engineer"],
+        tool_name="restart_service",
+        parameters={"service": "orders-api", "environment": "prod"},
+        environment="prod",
+        tenant="retail",
+        user_tenants=["retail"],
+        action_type="write",
+        resource="orders-api",
+        original_task="Diagnose orders DLQ issue.",
+    )
+    approved = ToolRequest(
+        **{
+            **request.__dict__,
+            "approval_status": "approved",
+            "approval_action_hash": action_hash(request),
+            "approval_approver_roles": ["support-engineer"],
+        }
+    )
+    decision = broker.evaluate(approved)
+    assert decision.decision == "deny"
+    assert decision.reason == "approved action is missing required approver role"
 
 
 def test_valid_tool_call_that_violates_original_purpose_is_denied() -> None:

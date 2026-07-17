@@ -32,6 +32,7 @@ class ToolRequest:
     blast_radius: str | None = None
     approval_status: str | None = None
     approval_action_hash: str | None = None
+    approval_approver_roles: list[str] = field(default_factory=list)
     budget_remaining: int | None = None
     rollback_available: bool | None = None
     idempotency_key: str | None = None
@@ -150,6 +151,9 @@ class ToolPrivilegeBroker:
             if request.approval_status == "approved":
                 if request.approval_action_hash != computed_hash:
                     return self._decision("deny", "approval action hash does not match requested action", risk, request, computed_hash, policy_version)
+                required_role = tool_policy.get("required_approver_role")
+                if required_role and str(required_role) not in request.approval_approver_roles:
+                    return self._decision("deny", "approved action is missing required approver role", risk, request, computed_hash, policy_version)
                 return self._decision("allow", "approved action hash matched and policy revalidated", risk, request, computed_hash, policy_version)
             return self._decision(
                 "approval_required",

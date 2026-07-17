@@ -89,6 +89,7 @@ def test_hitl_broker_revalidates_after_approval() -> None:
             **request.__dict__,
             "approval_status": "approved",
             "approval_action_hash": action_hash(request),
+            "approval_approver_roles": ["ops-lead"],
         }
     )
     decision = broker.evaluate(approved)
@@ -96,3 +97,26 @@ def test_hitl_broker_revalidates_after_approval() -> None:
     assert decision.decision == "allow"
     assert decision.reason == "approved action hash matched and policy revalidated"
     assert decision.action_hash == action_hash(request)
+
+
+def test_hitl_approval_requires_configured_approver_role() -> None:
+    gate = ApprovalGate(AuditStore())
+    request = gate.maybe_pause("restart_service", {"service": "orders-api"}, "high", requester_id="user-123")
+    assert request is not None
+    role_bound = request.__class__(
+        **{
+            **request.__dict__,
+            "required_approver_role": "ops-lead",
+        }
+    )
+
+    try:
+        role_bound.approve("approver-1", ["support-engineer"])
+    except ValueError as exc:
+        assert str(exc) == "approval requires approver role: ops-lead"
+    else:
+        raise AssertionError("approval without required approver role should fail")
+
+    approved = role_bound.approve("approver-1", ["ops-lead"])
+    assert approved.status == "approved"
+    assert approved.approver_roles == ["ops-lead"]

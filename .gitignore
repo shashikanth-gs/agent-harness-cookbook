@@ -59,6 +59,7 @@ env.bak/
 venv.bak/
 
 # IDEs
+.DS_Store
 .idea/
 .vscode/
 *.swp

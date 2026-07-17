@@ -6,9 +6,9 @@ from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
 from langchain_core.tools import tool
-from langchain_litellm import ChatLiteLLM
-
 from agent_harness_cookbook.harness.privilege_broker import ToolPrivilegeBroker, ToolRequest
+from agent_harness_cookbook.providers.langchain import get_chat_model
+import os
 
 # 1. State Definition
 class AgentState(TypedDict):
@@ -46,8 +46,11 @@ tools = [delete_database, read_database]
 
 # 4. Enterprise Nodes
 def call_model(state: AgentState):
-    # Mock LLM for local testing
-    return {"messages": [AIMessage(content="", tool_calls=[{"name": "read_database", "args": {}, "id": "call_1"}])]}
+    mock_msg = AIMessage(content="", tool_calls=[{"name": "read_database", "args": {}, "id": "call_1"}])
+    llm = get_chat_model(model=os.getenv("AHC_MODEL", "gpt-4o-mini"), mock_responses=[mock_msg])
+    llm_with_tools = llm.bind_tools(tools)
+    response = llm_with_tools.invoke(state["messages"])
+    return {"messages": [response]}
 
 class SecureToolNode(ToolNode):
     def invoke(self, input, config=None, **kwargs):

@@ -4,7 +4,6 @@ from typing import TypedDict, Annotated
 from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage, AIMessage
-from langchain_litellm import ChatLiteLLM
 
 from agent_harness_cookbook.harness.redaction import redact
 

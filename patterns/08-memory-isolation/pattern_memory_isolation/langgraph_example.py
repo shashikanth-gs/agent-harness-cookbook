@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import TypedDict, Annotated
 from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, END
-from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_litellm import ChatLiteLLM
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from agent_harness_cookbook.providers.langchain import get_chat_model
 
 from agent_harness_cookbook.harness.memory_isolation import (
     NamespaceMemoryManager,
@@ -20,7 +20,6 @@ manager = NamespaceMemoryManager()
 manager.write_working_memory("tenant_X", "api_key", "redacted-demo-token")
 gateway = TenantContextGateway(manager)
 
-llm = ChatLiteLLM(model="gpt-4o-mini")
 
 # 2. Nodes
 def context_gateway_node(state: AgentState):
@@ -34,6 +33,8 @@ def context_gateway_node(state: AgentState):
 
 def call_model(state: AgentState):
     # LLM invoked with the strictly isolated state
+    mock_msg = AIMessage(content="Tenant-scoped context loaded.")
+    llm = get_chat_model(model="gpt-4o-mini", mock_responses=[mock_msg])
     response = llm.invoke(state["messages"])
     return {"messages": [response]}
 

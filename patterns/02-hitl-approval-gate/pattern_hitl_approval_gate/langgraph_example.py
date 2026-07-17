@@ -4,7 +4,7 @@ from typing import TypedDict, Annotated, Literal
 from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import AIMessage
-from langchain_litellm import ChatLiteLLM
+from agent_harness_cookbook.providers.langchain import get_chat_model
 
 from agent_harness_cookbook.harness.approvals import ApprovalRequest
 
@@ -13,11 +13,14 @@ class AgentState(TypedDict):
     pending_approval: ApprovalRequest | None
 
 # 1. Harness Integration
-llm = ChatLiteLLM(model="gpt-4o-mini")
 
 # 2. Nodes
 def call_model(state: AgentState):
     # Mocking LLM decision to modify config
+    mock_msg = AIMessage(content="Approve modification", tool_calls=[{"name": "modify_config", "args": {"env": "prod"}, "id": "call_1"}])
+    llm = get_chat_model(model="gpt-4o-mini", mock_responses=[mock_msg])
+    response = llm.invoke(state["messages"])
+    
     req = ApprovalRequest(
         action="modify_config",
         parameters={"env": "prod"},

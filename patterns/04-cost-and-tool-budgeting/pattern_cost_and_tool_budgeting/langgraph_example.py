@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TypedDict, Annotated
 from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, END
-from langchain_litellm import ChatLiteLLM
+from agent_harness_cookbook.providers.langchain import get_chat_model
 from langchain_core.messages import AIMessage
 
 from agent_harness_cookbook.harness.budgets import BudgetTracker, BudgetLimits, BudgetExceeded
@@ -30,8 +30,10 @@ def call_model(state: AgentState):
         
     cost = 60
     try:
+        llm = get_chat_model(model="gpt-4o-mini", mock_responses=[AIMessage(content="LLM generation successful.")])
+        response = llm.invoke(state["messages"])
         tracker.consume(tokens=cost)
-        return {"messages": [AIMessage(content="LLM generation successful.")]}
+        return {"messages": [response]}
     except BudgetExceeded as e:
         return {"messages": [AIMessage(content=f"Error: {e}")]}
 

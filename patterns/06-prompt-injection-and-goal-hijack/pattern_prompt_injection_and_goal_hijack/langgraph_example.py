@@ -4,7 +4,7 @@ from typing import TypedDict, Annotated, Literal
 from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage, AIMessage
-from langchain_litellm import ChatLiteLLM
+from agent_harness_cookbook.providers.langchain import get_chat_model
 
 from agent_harness_cookbook.harness.injection_defense import SemanticAuditor
 
@@ -13,7 +13,6 @@ class AgentState(TypedDict):
 
 # 1. Harness integration
 auditor = SemanticAuditor()
-llm = ChatLiteLLM(model="gpt-4o-mini")
 
 # 2. Nodes
 def audit_gate_node(state: AgentState) -> dict:
@@ -36,6 +35,8 @@ def should_execute_agent(state: AgentState) -> Literal["agent", END]:
     return "agent"
 
 def call_model(state: AgentState):
+    mock_msg = AIMessage(content="Input passed the injection audit.")
+    llm = get_chat_model(model="gpt-4o-mini", mock_responses=[mock_msg])
     response = llm.invoke(state["messages"])
     return {"messages": [response]}
 

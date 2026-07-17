@@ -4,7 +4,7 @@ from typing import TypedDict, Annotated
 from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import AIMessage
-from langchain_litellm import ChatLiteLLM
+from agent_harness_cookbook.providers.langchain import get_chat_model
 
 from agent_harness_cookbook.harness.lifecycle import (
     AgentManifest,
@@ -18,7 +18,6 @@ class AgentState(TypedDict):
 
 # 1. Harness integration
 manager = LifecycleManager("secret")
-llm = ChatLiteLLM(model="gpt-4o-mini")
 
 # 2. Nodes
 def call_model(state: AgentState):
@@ -28,7 +27,9 @@ def call_model(state: AgentState):
          return {"messages": [AIMessage(content="Error: Lifecycle Budget Exhausted")]}
     
     # Normally: response = llm.invoke(state["messages"])
-    response = AIMessage(content=f"Executing with budget constraint: ${budget}")
+    mock_msg = AIMessage(content=f"Executing with budget constraint: ${budget}")
+    llm = get_chat_model(model="gpt-4o-mini", mock_responses=[mock_msg])
+    response = llm.invoke(state["messages"])
     return {"messages": [response]}
 
 # 3. Build Graph

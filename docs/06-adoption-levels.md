@@ -1,10 +1,31 @@
 # Adoption Levels
 
-Patterns use adoption levels so teams can choose the right amount of harnessing:
+Patterns use adoption levels so teams can choose the right amount of harnessing
+for the risk of the agent. Use the same Level 0 through Level 5 scale across
+the repository.
 
-- Level 0: unmanaged baseline,
-- Level 1: simple explicit control,
-- Level 2: validation and structured decisions,
-- Level 3: policy-driven behavior,
-- Level 4: audit, approval, and eval integration,
-- Level 5: mature operational controls.
+## Level 0: Unmanaged Baseline
+The agent or application calls models, tools, memory, or retrieval directly.
+This is useful only for prototypes and threat discovery.
+
+## Level 1: Explicit Static Controls
+The harness introduces simple allowlists, basic classification, or fixed limits.
+Examples include a static tool allowlist, tenant filter, or maximum tool-call
+count.
+
+## Level 2: Validation and Structured Decisions
+The harness validates schemas, parameters, sources, and data labels before
+passing work to the model or tool layer.
+
+## Level 3: Policy-Driven Behavior
+Decisions include identity, tenant, purpose, environment, resource, and risk.
+At this level, the harness starts to enforce enterprise policy rather than only
+local checks.
+
+## Level 4: Audit, Approval, and Evaluation Integration
+High-risk actions require approval, decisions are recorded in structured audit
+events, and trajectory checks can inspect what happened during a run.
+
+## Level 5: Mature Operational Controls
+The harness combines policy, approval, audit, evals, anomaly detection, CI/CD
+gates, lifecycle review, and operational monitoring.

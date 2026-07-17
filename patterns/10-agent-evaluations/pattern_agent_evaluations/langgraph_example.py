@@ -5,7 +5,6 @@ from typing import TypedDict, Annotated, Literal
 from langchain_core.messages import BaseMessage, AIMessage, ToolMessage
 from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, END
-from langchain_litellm import ChatLiteLLM
 
 from agent_harness_cookbook.harness.evaluations import TrajectoryScorer
 
@@ -14,7 +13,6 @@ class AgentState(TypedDict):
 
 # 1. Harness integration
 scorer = TrajectoryScorer()
-llm = ChatLiteLLM(model="gpt-4o-mini")
 
 # 2. Nodes
 def call_model(state: AgentState):

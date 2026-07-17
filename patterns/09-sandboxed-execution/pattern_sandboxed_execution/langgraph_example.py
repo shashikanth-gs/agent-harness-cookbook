@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import json
 from typing import TypedDict, Annotated, Literal
-from langchain_core.messages import ToolMessage
+from langchain_core.messages import AIMessage
 from langchain_core.tools import tool
 from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
-from langchain_litellm import ChatLiteLLM
+from agent_harness_cookbook.providers.langchain import get_chat_model
 
 from agent_harness_cookbook.harness.sandbox import ContainerRuntime
 
@@ -28,10 +28,14 @@ def execute_python_code(code: str) -> str:
     return f"Success: {res.stdout}"
 
 tools = [execute_python_code]
-llm = ChatLiteLLM(model="gpt-4o-mini").bind_tools(tools)
 
 # 3. Nodes
 def call_model(state: AgentState):
+    mock_msg = AIMessage(
+        content="",
+        tool_calls=[{"name": "execute_python_code", "args": {"code": "print('ok')"}, "id": "call_1"}],
+    )
+    llm = get_chat_model(model="gpt-4o-mini", mock_responses=[mock_msg]).bind_tools(tools)
     response = llm.invoke(state["messages"])
     return {"messages": [response]}
 

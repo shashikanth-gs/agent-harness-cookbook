@@ -1,15 +1,88 @@
 from __future__ import annotations
 
+import base64
+import binascii
+import re
 import secrets
 import string
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable, Literal
+
+
+ContentRole = Literal["authority", "task_intent", "evidence", "observation", "context", "delegated_instruction"]
+
 
 @dataclass
 class DefenseDecision:
     is_safe: bool
     reason: str
     confidence: float
+
+
+@dataclass(frozen=True)
+class InjectionScanResult:
+    cleaned_text: str
+    findings: list[str]
+    decoded_findings: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class SourceClassification:
+    source: str
+    trust_level: str
+    content_role: ContentRole
+    requires_citation: bool
+
+
+INJECTION_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
+    ("instruction_override", re.compile(r"\b(ignore|disregard|forget|override)\b.+\b(instruction|policy|previous|prior|rules)\b", re.I)),
+    ("secret_exfiltration", re.compile(r"\b(print|reveal|send|dump|exfiltrate)\b.+\b(secret|token|api key|credential|env)\b", re.I)),
+    ("unsafe_prod_action", re.compile(r"\b(restart|rollback|delete|disable)\b.+\b(prod|production|payment-service|validation)\b", re.I)),
+    ("policy_bypass", re.compile(r"\b(skip|bypass|disable)\b.+\b(approval|policy|validation|guardrail)\b", re.I)),
+]
+
+
+def classify_source(source: str) -> SourceClassification:
+    if source in {"system", "policy", "platform_policy"}:
+        return SourceClassification(source, "trusted", "authority", False)
+    if source == "user":
+        return SourceClassification(source, "user", "task_intent", False)
+    if source in {"retrieved_document", "openapi_description", "confluence_page", "runbook"}:
+        return SourceClassification(source, "untrusted", "evidence", True)
+    if source in {"tool_result", "log_search", "metrics_lookup", "release_events", "ticket", "log_line"}:
+        return SourceClassification(source, "untrusted", "observation", True)
+    if source in {"agent_message", "subagent_message"}:
+        return SourceClassification(source, "delegated", "delegated_instruction", True)
+    return SourceClassification(source, "untrusted", "context", True)
+
+
+def scan_for_injection(text: str) -> InjectionScanResult:
+    findings = [name for name, pattern in INJECTION_PATTERNS if pattern.search(text)]
+    decoded_findings: list[str] = []
+    for token in re.findall(r"(?<![A-Za-z0-9+/])[A-Za-z0-9+/]{16,}={0,2}(?![A-Za-z0-9+/])", text):
+        try:
+            decoded = base64.b64decode(token, validate=True).decode("utf-8")
+        except (binascii.Error, UnicodeDecodeError, ValueError):
+            continue
+        decoded_findings.extend(f"decoded:{name}" for name, pattern in INJECTION_PATTERNS if pattern.search(decoded))
+
+    cleaned = text
+    if findings or decoded_findings:
+        cleaned = re.sub(
+            r"\b(ignore|disregard|forget|override)\b[^.\n]*\b(instruction|policy|previous|prior|rules)\b[^.\n]*[.]?",
+            "[REMOVED_UNTRUSTED_INSTRUCTION]",
+            cleaned,
+            flags=re.I,
+        )
+        cleaned = re.sub(
+            r"\b(restart|rollback|delete|disable)\b[^.\n]*(prod|production|payment-service|validation)[^.\n]*[.]?",
+            "[REMOVED_UNTRUSTED_ACTION]",
+            cleaned,
+            flags=re.I,
+        )
+
+    return InjectionScanResult(cleaned, findings, decoded_findings)
+
 
 class InstructionBoundary:
     """
